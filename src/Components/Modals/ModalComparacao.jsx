@@ -491,6 +491,7 @@ const ModalComparacao = () => {
                         }}
                       >
                         <MenuItem value="Psicólogo">Psicólogo(a)</MenuItem>
+                        <MenuItem value="Arquiteto">Arquiteto(a)</MenuItem>
                       </Select>
                     </FormControl>
                   </Box>
