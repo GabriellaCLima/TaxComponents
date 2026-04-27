@@ -43,8 +43,10 @@ const CalculoPF = () => {
   });
 
   const watchedFields = watch();
-  const isButtonDisabled =
-    !watchedFields.rendaMensal || !watchedFields.custosMensais;
+  const areAllFieldsFilled =
+    watchedFields.rendaMensal && watchedFields.custosMensais;
+
+  const isButtonDisabled = !areAllFieldsFilled;
 
   const [resultado, setResultado] = useState(null);
   const [alertVisible, setAlertVisible] = useState(false);
@@ -62,7 +64,9 @@ const CalculoPF = () => {
     setAlertMessage(message);
     setAlertSeverity(severity);
     setAlertVisible(true);
-    setTimeout(() => setAlertVisible(false), 2000);
+    setTimeout(() => {
+      setAlertVisible(false);
+    }, 2000);
   };
 
   const enviarEmail = (resultadoPF) => {
@@ -74,6 +78,7 @@ const CalculoPF = () => {
   // 🔥 FUNÇÃO ATUALIZADA 2026
   const calcularIRPF = (data) => {
     const rendaMensal = parseFloat(data.rendaMensal) || 0;
+    const custosMensais = parseFloat(data.custosMensais) || 0;
 
     if (rendaMensal > LIMITE_RENDA) {
       showAlert(
@@ -88,24 +93,23 @@ const CalculoPF = () => {
     let baseCalculo = rendaMensal - DESCONTO_SIMPLIFICADO;
     if (baseCalculo < 0) baseCalculo = 0;
 
+    const faixas = [
+      { limite: 2428.8, aliquota: 0, deducao: 0 },
+      { limite: 2826.65, aliquota: 0.075, deducao: 182.16 },
+      { limite: 3751.05, aliquota: 0.15, deducao: 394.16 },
+      { limite: 4664.68, aliquota: 0.225, deducao: 675.49 },
+      { limite: Infinity, aliquota: 0.275, deducao: 908.73 },
+    ];
+
     let aliquota = 0;
     let deducao = 0;
 
-    if (baseCalculo <= 2428.8) {
-      aliquota = 0;
-      deducao = 0;
-    } else if (baseCalculo <= 2826.65) {
-      aliquota = 0.075;
-      deducao = 182.16;
-    } else if (baseCalculo <= 3751.05) {
-      aliquota = 0.15;
-      deducao = 394.16;
-    } else if (baseCalculo <= 4664.68) {
-      aliquota = 0.225;
-      deducao = 675.49;
-    } else {
-      aliquota = 0.275;
-      deducao = 908.73;
+    for (let faixa of faixas) {
+      if (baseCalculo <= faixa.limite) {
+        aliquota = faixa.aliquota;
+        deducao = faixa.deducao;
+        break;
+      }
     }
 
     let imposto = baseCalculo * aliquota - deducao;
@@ -125,6 +129,7 @@ const CalculoPF = () => {
 
     setResultado({
       rendaMensal,
+      custosMensais,
       baseCalculo,
       aliquota: aliquota * 100,
       deducao,
@@ -139,101 +144,82 @@ const CalculoPF = () => {
   const handleEnviarEmail = () => {
     const emailValue = watch("emailUsuario");
 
-    if (!emailValue) {
-      showAlert("Informe seu e-mail", "error");
+    if (!emailValue || emailValue.trim() === "") {
+      showAlert("Por favor, informe seu e-mail", "error");
       return;
     }
 
     const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailRegex.test(emailValue)) {
-      showAlert("E-mail inválido", "error");
+      showAlert("Por favor, informe um e-mail válido", "error");
       return;
     }
 
     if (resultado) {
       enviarEmail(resultado);
     } else {
-      showAlert("Calcule primeiro", "error");
+      showAlert("Por favor, calcule os resultados primeiro", "error");
     }
   };
 
   return (
-    <Box sx={{ maxWidth: 900, mx: "auto", p: 4 }}>
-      <Typography variant="h4" align="center" fontWeight="bold">
-        Cálculo IRPF 2026
+    <Box sx={{ maxWidth: 900, mx: "auto", p: { xs: 2, md: 4 } }}>
+      <Typography variant="h4" align="center" fontWeight="bold" sx={{ mb: 3 }}>
+        Cálculo de Tributação - Pessoa Física (IRPF)
       </Typography>
 
-      <Paper sx={{ p: 3, mt: 3 }}>
+      <Paper sx={{ p: 3, backgroundColor: colors.primary[500] }}>
         <Box component="form" onSubmit={handleSubmit(calcularIRPF)}>
-          <TextField
-            label="Renda Mensal"
-            type="number"
-            fullWidth
-            {...register("rendaMensal", { required: true })}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">R$</InputAdornment>
-              ),
-              endAdornment: <RendaTooltip />,
-            }}
-            sx={{ mb: 2 }}
-          />
+          <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+            <TextField
+              label="Renda Mensal"
+              type="number"
+              fullWidth
+              required
+              {...register("rendaMensal", { required: true })}
+            />
+
+            <TextField
+              label="Custos Mensais"
+              type="number"
+              fullWidth
+              required
+              {...register("custosMensais", { required: true })}
+            />
+          </Box>
 
           <Button
             type="submit"
             fullWidth
             variant="contained"
+            sx={{ mt: 3 }}
             disabled={isButtonDisabled}
           >
-            Calcular
+            Calcular Tributação
           </Button>
         </Box>
 
         {resultado && (
-          <Box mt={3}>
+          <Paper sx={{ mt: 3, p: 2 }}>
             <Typography>Base: {formatMoney(resultado.baseCalculo)}</Typography>
             <Typography>Alíquota: {resultado.aliquota}%</Typography>
             <Typography>
-              Imposto antes: {formatMoney(resultado.impostoAntesRedutor)}
+              Imposto antes:{" "}
+              {formatMoney(resultado.impostoAntesRedutor)}
             </Typography>
             <Typography>
               Redutor: {formatMoney(resultado.redutor)}
             </Typography>
-            <Typography fontWeight="bold" color="error">
+            <Typography color="error" fontWeight="bold">
               Imposto Final: {formatMoney(resultado.imposto)}
             </Typography>
-          </Box>
+          </Paper>
         )}
       </Paper>
-
-      <Box mt={2}>
-        <FormControlLabel
-          control={<Checkbox {...register("enviarEmail")} />}
-          label="Enviar por e-mail"
-        />
-
-        {watch("enviarEmail") && (
-          <>
-            <TextField
-              label="E-mail"
-              fullWidth
-              {...register("emailUsuario")}
-              sx={{ mt: 1 }}
-            />
-            <Button onClick={handleEnviarEmail}>Enviar</Button>
-          </>
-        )}
-      </Box>
 
       <Collapse in={alertVisible}>
         <Alert severity={alertSeverity}>{alertMessage}</Alert>
       </Collapse>
-
-      <Box mt={3}>
-        <Link onClick={() => navigate("/calculadora")}>
-          Ir para comparação PF x PJ
-        </Link>
-      </Box>
     </Box>
   );
 };
