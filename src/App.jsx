@@ -9,38 +9,34 @@ import { ColorModeContext, useMode } from "./Tema";
 import Home from "./Pages/Página Inicial/Home";
 import Login from "./Pages/Login/Login";
 import Register from "./Pages/Register/Register";
+import Esqueci from "./Pages/Esqueci a senha/Esqueci";
+import Contatos from "./Pages/Contatos";
+import Explicacao from "./Pages/Explicação/Explicacao";
+import Error from "./Pages/Error";
 import CalculoPF from "./Pages/Cálculos/CalculoPF";
 import CalculoPJ from "./Pages/Cálculos/CalculoPJ";
 import CalculadoraTributaria from "./Pages/Cálculos/CalculadoraTributaria";
-import Explicacao from "./Pages/Explicação/Explicacao";
+import CalculoPFAdv from "./Pages/Cálculos/CalculoPFAdv";
+import CalculoPJAdv from "./Pages/Cálculos/CalculoPJAdv";
+import CalculadoraTributariaAdv from "./Pages/Cálculos/CalculadoraTributariaAdv";
 import PageLayout from "./Layout/PageLayout";
-import Esqueci from "./Pages/Esqueci a senha/Esqueci";
-import Contatos from "./Pages/Contatos";
-import Error from "./Pages/Error";
 import CircularProgress from '@mui/material/CircularProgress';
 import AuthGuard from "./Components/AuthGuard";
-import CalculoPJAdvogado from "./Pages/Cálculos/CalculoPJAdv";
 
 function App() {
-  // Hook personalizado para obter tema e função de alternância de modo
   const [theme, colorMode] = useMode();
-  
-  // Estado para controlar carregamento inicial da aplicação
   const [isLoading, setIsLoading] = React.useState(true);
 
-  // Effect para garantir que o tema foi carregado antes de renderizar
   React.useEffect(() => {
-    // Pequeno atraso para garantir que o tema foi carregado
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 100);
     return () => clearTimeout(timer);
   }, []);
 
-  // Exibe loading enquanto inicializa
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex" }}>
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
         <CircularProgress />
       </Box>
     )
@@ -54,20 +50,28 @@ function App() {
           <div className="app">
             <main className="content">
               <Routes>
+                {/* Rotas Públicas */}
                 <Route path="/" element={<Login />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/login/forgot" element={<Esqueci />} />
                 <Route path="*" element={<Error />} />
+
+                {/* Rotas Privadas */}
                 <Route element={<PageLayout />}>
                   <Route path="/home" element={<AuthGuard><Home /></AuthGuard>} />
+                  <Route path="/tributacao" element={<AuthGuard><Explicacao /></AuthGuard>} />
+                  <Route path="/contatos" element={<AuthGuard><Contatos /></AuthGuard>} />
+                  
+                  {/* Rotas de Cálculo Padrão (Psicólogos/Arquitetos) */}
                   <Route path="/calculadora" element={<AuthGuard><CalculadoraTributaria /></AuthGuard>} />
                   <Route path="/calculopf" element={<AuthGuard><CalculoPF /></AuthGuard>} />
                   <Route path="/calculopj" element={<AuthGuard><CalculoPJ /></AuthGuard>} />
 
-                  <Route path="/calculopjadv" element={<AuthGuard><CalculoPJAdvogado /></AuthGuard>} />
-                  <Route path="/tributacao" element={<AuthGuard><Explicacao /></AuthGuard>} />
-                  <Route path="/contatos" element={<AuthGuard><Contatos /></AuthGuard>} />
+                  {/* Rotas de Cálculo Específicas (Advogados) */}
+                  <Route path="/calculadoraadv" element={<AuthGuard><CalculadoraTributariaAdv /></AuthGuard>} />
+                  <Route path="/calculopfadv" element={<AuthGuard><CalculoPFAdv /></AuthGuard>} />
+                  <Route path="/calculopjadv" element={<AuthGuard><CalculoPJAdv /></AuthGuard>} />
                 </Route>
               </Routes>
             </main>
