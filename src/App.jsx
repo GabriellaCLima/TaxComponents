@@ -19,6 +19,7 @@ import Contatos from "./Pages/Contatos";
 import Error from "./Pages/Error";
 import CircularProgress from '@mui/material/CircularProgress';
 import AuthGuard from "./Components/AuthGuard";
+import CalculoPJAdvogado from "./Pages/Cálculos/CalculoPJAdv";
 
 function App() {
   // Hook personalizado para obter tema e função de alternância de modo
@@ -63,6 +64,8 @@ function App() {
                   <Route path="/calculadora" element={<AuthGuard><CalculadoraTributaria /></AuthGuard>} />
                   <Route path="/calculopf" element={<AuthGuard><CalculoPF /></AuthGuard>} />
                   <Route path="/calculopj" element={<AuthGuard><CalculoPJ /></AuthGuard>} />
+
+                  <Route path="/calculopjadv" element={<AuthGuard><CalculoPJAdvogado /></AuthGuard>} />
                   <Route path="/tributacao" element={<AuthGuard><Explicacao /></AuthGuard>} />
                   <Route path="/contatos" element={<AuthGuard><Contatos /></AuthGuard>} />
                 </Route>
