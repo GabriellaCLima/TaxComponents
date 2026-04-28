@@ -37,7 +37,7 @@ const CalculoPJ = () => {
   } = useForm({
     defaultValues: {
       rendaMensal: "",
-      salarioMinimo: "1518.0", // Valor mínimo para pró-labore
+      salarioMinimo: "1621.0", // ATUALIZADO: Valor mínimo para 2026
       enviarEmail: false,
       emailUsuario: "",
     },
@@ -85,7 +85,7 @@ const CalculoPJ = () => {
   // Função principal de cálculo de tributação para Pessoa Jurídica
   const calcularPJ = (data) => {
     const renda = parseFloat(data.rendaMensal) || 0;
-    const salarioMinimo = parseFloat(data.salarioMinimo) || 1518.0;
+    const salarioMinimo = parseFloat(data.salarioMinimo) || 1621.0; // ATUALIZADO: Base 2026
 
     // Validação adicional do limite de renda
     if (renda > LIMITE_RENDA) {
@@ -96,13 +96,14 @@ const CalculoPJ = () => {
       return;
     }
 
-    // Pró-labore: maior valor entre 28% da renda ou salário mínimo vigente
+    // LÓGICA ATUALIZADA:
+    // Pró-labore: Deve ser 28% da receita bruta (Fator R), mas nunca inferior ao salário mínimo vigente.
     const proLabore = Math.max(renda * 0.28, salarioMinimo);
 
-    // Simples Nacional (Anexo III): 6% sobre a renda mensal total
+    // Simples Nacional (Anexo III): 6% sobre a renda mensal total (para faturamento até 15k)
     const simples = renda * 0.06;
 
-    // INSS sobre pró-labore: 11% do valor do pró-labore
+    // INSS sobre pró-labore: Alíquota de 11% aplicada sobre o valor do pró-labore.
     const inss = proLabore * 0.11;
 
     // Total de tributos PJ (Simples Nacional + INSS)
@@ -346,7 +347,7 @@ const CalculoPJ = () => {
             >
               {/* Primeira Linha */}
               <Grid container spacing={2} justifyContent="center">
-                <Grid size={{ xs: 12, sm: 3 }} sx={{ textAlign: "center" }}>
+                <Grid item xs={12} sm={3} sx={{ textAlign: "center" }}>
                   <Typography variant="body2" fontWeight="600">
                     Renda Mensal:
                   </Typography>
@@ -355,7 +356,7 @@ const CalculoPJ = () => {
                   </Typography>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 3 }} sx={{ textAlign: "center" }}>
+                <Grid item xs={12} sm={3} sx={{ textAlign: "center" }}>
                   <Typography variant="body2" fontWeight="600">
                     Pró-labore:
                   </Typography>
@@ -364,7 +365,7 @@ const CalculoPJ = () => {
                   </Typography>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 3 }} sx={{ textAlign: "center" }}>
+                <Grid item xs={12} sm={3} sx={{ textAlign: "center" }}>
                   <Typography variant="body2" fontWeight="600">
                     Simples Nacional (6%):
                   </Typography>
@@ -373,7 +374,7 @@ const CalculoPJ = () => {
                   </Typography>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 3 }} sx={{ textAlign: "center" }}>
+                <Grid item xs={12} sm={3} sx={{ textAlign: "center" }}>
                   <Typography variant="body2" fontWeight="600">
                     INSS (11% sobre pró-labore):
                   </Typography>
@@ -385,7 +386,7 @@ const CalculoPJ = () => {
 
               {/* Segunda Linha */}
               <Grid container spacing={2} justifyContent="center" sx={{gap: 5}}>
-                <Grid size={{ xs: 12, sm: 3 }} sx={{ textAlign: "center" }}>
+                <Grid item xs={12} sm={3} sx={{ textAlign: "center" }}>
                   <Typography variant="body2" fontWeight="600">
                     Total PJ (Simples + INSS):
                   </Typography>
@@ -398,7 +399,7 @@ const CalculoPJ = () => {
                   </Typography>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 3 }} sx={{ textAlign: "center" }}>
+                <Grid item xs={12} sm={3} sx={{ textAlign: "center" }}>
                   <Typography
                     variant="body2"
                     fontWeight="600"
