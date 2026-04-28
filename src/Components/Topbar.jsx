@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   useTheme,
   Button,
@@ -24,8 +24,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
 import Logo from "../../Assets/NAF.png";
 
-
-
 // Largura do drawer lateral
 const drawerWidth = 240;
 // Itens do menu de navegação
@@ -38,10 +36,21 @@ function Topbar(props) {
 
   const { window } = props;
   // Estado para controlar abertura/fechamento do drawer mobile
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   // Estado para controlar menu dropdown de cálculo
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
+
+  // RECUPERA PROFISSÃO PARA ROTEAMENTO DINÂMICO
+  const [profissao, setProfissao] = useState("");
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      setProfissao(user.profissao || "");
+    }
+  }, []);
 
   // Alterna estado do drawer mobile
   const handleDrawerToggle = () => {
@@ -64,12 +73,11 @@ function Topbar(props) {
     navigate(path);
   };
 
-      const handleLogout = () => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      navigate('/');
-    };
-
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/');
+  };
 
   // Manipula clique nos itens do menu
   const handleItemClick = (item, event) => {
@@ -85,6 +93,10 @@ function Topbar(props) {
     }
   };
 
+  // HELPERS DE ROTEAMENTO DINÂMICO (Baseado na profissão)
+  const getRotaComparacao = () => profissao === "Advogado" ? "/calculadoraadv" : "/calculadora";
+  const getRotaPF = () => profissao === "Advogado" ? "/calculopfadv" : "/calculopf";
+  const getRotaPJ = () => profissao === "Advogado" ? "/calculopjadv" : "/calculopj";
 
 
   const drawer = (
@@ -135,14 +147,14 @@ function Topbar(props) {
         open={Boolean(anchorEl)}
         onClose={handleCloseMenu}
       >
-        <MenuItem onClick={() => handleNavigate("/calculadora")}>
+        <MenuItem onClick={() => handleNavigate(getRotaComparacao())}>
           Comparação (PF x PJ)
         </MenuItem>
         <Divider />
-        <MenuItem onClick={() => handleNavigate("/calculopf")}>
+        <MenuItem onClick={() => handleNavigate(getRotaPF())}>
           Pessoa Física
         </MenuItem>
-        <MenuItem onClick={() => handleNavigate("/calculopj")}>
+        <MenuItem onClick={() => handleNavigate(getRotaPJ())}>
           Pessoa Jurídica
         </MenuItem>
       </Menu>
@@ -231,14 +243,14 @@ function Topbar(props) {
                       open={Boolean(anchorEl)}
                       onClose={handleCloseMenu}
                     >
-                      <MenuItem onClick={() => handleNavigate("/calculadora")}>
+                      <MenuItem onClick={() => handleNavigate(getRotaComparacao())}>
                         Comparação (PF x PJ)
                       </MenuItem>
                       <Divider />
-                      <MenuItem onClick={() => handleNavigate("/calculopf")}>
+                      <MenuItem onClick={() => handleNavigate(getRotaPF())}>
                         Pessoa Física
                       </MenuItem>
-                      <MenuItem onClick={() => handleNavigate("/calculopj")}>
+                      <MenuItem onClick={() => handleNavigate(getRotaPJ())}>
                         Pessoa Jurídica
                       </MenuItem>
                     </Menu>
