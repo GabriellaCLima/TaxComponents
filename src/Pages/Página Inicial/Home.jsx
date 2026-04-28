@@ -3,8 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Box, Typography, Stack } from "@mui/material";
 import ModalCalculoPF from "../../Components/Modals/ModalCalculoPF";
 import ModalCalculoPJ from "../../Components/Modals/ModalCalculoPJ";
+import ModalCalculoPFAdv from "../../Components/Modals/ModalCalculoPFAdv";
+import ModalCalculoPJAdv from "../../Components/Modals/ModalCalculoPJAdv";
 import ModalExplicacoes from "../../Components/Modals/ModalExplicacoes";
 import ModalComparacao from "../../Components/Modals/ModalComparacao";
+import { tokens } from "../../Tema";
+import { useTheme } from "@mui/material/styles";
 
 const Home = () => {
   // Obtém nome do usuário do store global
@@ -16,15 +20,33 @@ const Home = () => {
     const userData = localStorage.getItem('user');
 
     console.log('userData: ', userData);
-    console.log('userData: ', userData);
-
     
     console.log("Usuario autenticado!")
-    setUser(JSON.parse(userData));
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
 
   }, [navigate]);
 
   const displayName = user?.username || "Visitante";
+  const profissao = user?.profissao || "";
+
+  // Lógica para definir qual botão PF mostrar com base na profissão
+  const renderBotaoPF = () => {
+    if (profissao === "Advogado") {
+      return <ModalCalculoPFAdv />;
+    }
+    return <ModalCalculoPF />;
+  };
+
+  // Lógica para definir qual botão PJ mostrar com base na profissão
+  const renderBotaoPJ = () => {
+    if (profissao === "Advogado") {
+      return <ModalCalculoPJAdv />;
+    }
+    return <ModalCalculoPJ />;
+  };
+
   return (
     <Box
       // ESTILIZAÇÃO DO CONTAINER PRINCIPAL
@@ -46,7 +68,8 @@ const Home = () => {
 
       {/* SUBTÍTULO DESCRITIVO */}
       <Typography variant="body1" sx={{ mb: 4, fontSize: "18px" }}>
-        Compare a tributação entre Pessoa Física e Pessoa Jurídica para profissionais de psicologia
+        {/* Ajustado para mostrar a profissão real do usuário dinamicamente */}
+        Compare a tributação entre Pessoa Física e Pessoa Jurídica para profissionais de {profissao ? profissao.toLowerCase() : "sua área"}
       </Typography>
 
       {/* SEÇÃO DA CALCULADORA COMPARATIVA */}
@@ -80,8 +103,9 @@ const Home = () => {
           alignItems="center"
           justifyContent="center"
         >
-          <ModalCalculoPF />
-          <ModalCalculoPJ />
+          {/* Renderização dinâmica dos botões conforme a profissão do usuário */}
+          {renderBotaoPF()}
+          {renderBotaoPJ()}
         </Stack>
         
         {/* TEXTO DE DÚVIDAS */}
