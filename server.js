@@ -13,6 +13,9 @@ const app = express();
 const PORT = 3000;
 const saltRounds = 10;
 
+// Recomenda-se colocar a chave secreta no arquivo .env como JWT_SECRET=sua_chave
+const SECRET_KEY = process.env.JWT_SECRET || "847504968901ce55ef28d6a7fa24b568c6966734";
+
 // Middlewares Globais
 app.use(express.json()); // Substitui o body-parser
 app.use(
