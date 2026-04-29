@@ -1,12 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, Stack, Paper } from "@mui/material";
+
+// Importação dos Modais Padrão (Psicólogos)
 import ModalCalculoPF from "../../Components/Modals/ModalCalculoPF";
 import ModalCalculoPJ from "../../Components/Modals/ModalCalculoPJ";
 import ModalComparacao from "../../Components/Modals/ModalComparacao";
+
+// Importação dos Modais Específicos para Advogados (Anexo IV)
 import ModalCalculoPFAdv from "../../Components/Modals/ModalCalculoPFAdv";
 import ModalCalculoPJAdv from "../../Components/Modals/ModalCalculoPJAdv";
 import ModalComparacaoAdv from "../../Components/Modals/ModalComparacaoAdv";
+
+// Importação dos Modais Específicos para Arquitetos
+import ModalCalculoPFArq from "../../Components/Modals/ModalCalculoPFArq";
+import ModalCalculoPJArq from "../../Components/Modals/ModalCalculoPJArq";
+import ModalComparacaoArq from "../../Components/Modals/ModalComparacaoArq";
+
 import ModalExplicacoes from "../../Components/Modals/ModalExplicacoes";
 import { tokens } from "../../Tema";
 import { useTheme } from "@mui/material/styles";
@@ -19,16 +29,15 @@ const Home = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    console.log("useEffect esta rodando")
-    const userData = localStorage.getItem('user');
+    console.log("useEffect esta rodando");
+    const userData = localStorage.getItem("user");
 
-    console.log('userData: ', userData);
-    
-    console.log("Usuario autenticado!")
+    console.log("userData: ", userData);
+    console.log("Usuario autenticado!");
+
     if (userData) {
       setUser(JSON.parse(userData));
     }
-
   }, [navigate]);
 
   const displayName = user?.username || "Visitante";
@@ -39,7 +48,11 @@ const Home = () => {
     if (profissao === "Advogado") {
       return <ModalComparacaoAdv />;
     }
-    // Para Psicólogos, Arquitetos ou outros
+
+    if (profissao === "Arquiteto") {
+      return <ModalComparacaoArq />;
+    }
+
     return <ModalComparacao />;
   };
 
@@ -48,7 +61,11 @@ const Home = () => {
     if (profissao === "Advogado") {
       return <ModalCalculoPFAdv />;
     }
-    // Para Psicólogos, Arquitetos ou outros
+
+    if (profissao === "Arquiteto") {
+      return <ModalCalculoPFArq />;
+    }
+
     return <ModalCalculoPF />;
   };
 
@@ -57,7 +74,11 @@ const Home = () => {
     if (profissao === "Advogado") {
       return <ModalCalculoPJAdv />;
     }
-    // Para Psicólogos, Arquitetos ou outros
+
+    if (profissao === "Arquiteto") {
+      return <ModalCalculoPJArq />;
+    }
+
     return <ModalCalculoPJ />;
   };
 
@@ -82,28 +103,40 @@ const Home = () => {
 
       {/* SUBTÍTULO DESCRITIVO */}
       <Typography variant="body1" sx={{ mb: 4, fontSize: "18px" }}>
-        Compare a tributação entre Pessoa Física e Pessoa Jurídica para profissionais de {profissao ? profissao.toLowerCase() : "sua área"}
+        Compare a tributação entre Pessoa Física e Pessoa Jurídica para
+        profissionais de {profissao ? profissao.toLowerCase() : "sua área"}
       </Typography>
 
       {/* SEÇÃO DA CALCULADORA COMPARATIVA */}
       <Box sx={{ mb: 5 }}>
         {renderBotaoComparacao()}
+
         <Typography
           sx={{
             mt: 3,
-            fontSize: "18px" // Tamanho de fonte
+            fontSize: "18px", // Tamanho de fonte
           }}
         >
           Calcule e compare PF x PJ em uma única página
         </Typography>
       </Box>
 
-      <Paper variant="outlined" sx={{ p: 4, backgroundColor: colors.primary[400], borderRadius: 4 }}>
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 4,
+          backgroundColor: colors.primary[400],
+          borderRadius: 4,
+        }}
+      >
         {/* SEÇÃO DE CALCULADORAS INDIVIDUAIS */}
-        <Typography variant="body1" sx={{ mb: 3, fontSize: "18px", fontWeight: 'bold' }}>
+        <Typography
+          variant="body1"
+          sx={{ mb: 3, fontSize: "18px", fontWeight: "bold" }}
+        >
           Ou escolha uma modalidade específica para detalhamento:
         </Typography>
-        
+
         {/* STACK VERTICAL COM OPÇÕES */}
         <Stack
           direction="column" // Disposição vertical
@@ -124,12 +157,13 @@ const Home = () => {
             {renderBotaoPF()}
             {renderBotaoPJ()}
           </Stack>
-          
+
           {/* TEXTO DE DÚVIDAS */}
           <Typography sx={{ pt: 5, fontSize: "18px" }}>
-            Dúvidas sobre como os cálculos de {profissao ? profissao.toLowerCase() : "sua área"} são feitos?
+            Dúvidas sobre como os cálculos de{" "}
+            {profissao ? profissao.toLowerCase() : "sua área"} são feitos?
           </Typography>
-          
+
           {/* BOTÃO DE EXPLICAÇÕES */}
           <ModalExplicacoes />
         </Stack>

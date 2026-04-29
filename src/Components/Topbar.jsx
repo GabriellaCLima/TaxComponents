@@ -15,8 +15,8 @@ import {
   Toolbar,
   Typography,
   Menu,
-  MenuItem
-} from "@mui/material"
+  MenuItem,
+} from "@mui/material";
 import { ColorModeContext, tokens } from "../Tema";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
@@ -26,6 +26,7 @@ import Logo from "../../Assets/NAF.png";
 
 // Largura do drawer lateral
 const drawerWidth = 240;
+
 // Itens do menu de navegação
 const navItems = ["Página Inicial", "Tributação", "Contatos", "Cálculo", "Sair"];
 
@@ -33,19 +34,22 @@ function Topbar(props) {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
-
   const { window } = props;
+
   // Estado para controlar abertura/fechamento do drawer mobile
   const [mobileOpen, setMobileOpen] = useState(false);
+
   // Estado para controlar menu dropdown de cálculo
   const [anchorEl, setAnchorEl] = useState(null);
-  const navigate = useNavigate();
 
-  // RECUPERA PROFISSÃO PARA ROTEAMENTO DINÂMICO
+  // Recupera profissão para roteamento dinâmico
   const [profissao, setProfissao] = useState("");
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const userData = localStorage.getItem('user');
+    const userData = localStorage.getItem("user");
+
     if (userData) {
       const user = JSON.parse(userData);
       setProfissao(user.profissao || "");
@@ -74,30 +78,47 @@ function Topbar(props) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
   };
 
   // Manipula clique nos itens do menu
   const handleItemClick = (item, event) => {
     if (item === "Cálculo") {
-      handleCalculoClick(event); // Abre dropdown
+      handleCalculoClick(event);
     } else if (item === "Sair") {
-      handleLogout(); // Redireciona para login e apaga os dados do usuario
-    }else if (item === "Tributação") {
-      navigate("/tributacao")
-    }
-    else {
-      navigate(`/${item.toLowerCase()}`); // Navega para página
+      handleLogout();
+    } else if (item === "Tributação") {
+      navigate("/tributacao");
+    } else if (item === "Página Inicial") {
+      navigate("/home");
+    } else {
+      navigate(`/${item.toLowerCase()}`);
     }
   };
 
-  // HELPERS DE ROTEAMENTO DINÂMICO (Baseado na profissão)
-  const getRotaComparacao = () => profissao === "Advogado" ? "/calculadoraadv" : "/calculadora";
-  const getRotaPF = () => profissao === "Advogado" ? "/calculopfadv" : "/calculopf";
-  const getRotaPJ = () => profissao === "Advogado" ? "/calculopjadv" : "/calculopj";
+  // Helpers de roteamento dinâmico baseado na profissão
+  const getRotaComparacao = () => {
+    if (profissao === "Advogado") return "/calculadoraadv";
+    if (profissao === "Arquiteto") return "/calculadoraarq";
 
+    return "/calculadora";
+  };
+
+  const getRotaPF = () => {
+    if (profissao === "Advogado") return "/calculopfadv";
+    if (profissao === "Arquiteto") return "/calculopfarq";
+
+    return "/calculopf";
+  };
+
+  const getRotaPJ = () => {
+    if (profissao === "Advogado") return "/calculopjadv";
+    if (profissao === "Arquiteto") return "/calculopjarq";
+
+    return "/calculopj";
+  };
 
   const drawer = (
     <Box
@@ -123,7 +144,9 @@ function Topbar(props) {
         <img src={Logo} alt="Vasco" style={{ height: 24 }} />
         NAF
       </Typography>
+
       <Divider />
+
       <List>
         {navItems.map((item) => (
           <ListItem key={item} disablePadding>
@@ -142,18 +165,18 @@ function Topbar(props) {
           </ListItem>
         ))}
       </List>
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleCloseMenu}
-      >
+
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu}>
         <MenuItem onClick={() => handleNavigate(getRotaComparacao())}>
           Comparação (PF x PJ)
         </MenuItem>
+
         <Divider />
+
         <MenuItem onClick={() => handleNavigate(getRotaPF())}>
           Pessoa Física
         </MenuItem>
+
         <MenuItem onClick={() => handleNavigate(getRotaPJ())}>
           Pessoa Jurídica
         </MenuItem>
@@ -167,6 +190,7 @@ function Topbar(props) {
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
+
       <AppBar
         component="nav"
         sx={{
@@ -184,6 +208,7 @@ function Topbar(props) {
           >
             <MenuIcon />
           </IconButton>
+
           <Typography
             variant="h6"
             component="div"
@@ -197,6 +222,7 @@ function Topbar(props) {
             <img src={Logo} alt="Vasco" style={{ height: 24 }} />
             NAF
           </Typography>
+
           <IconButton
             onClick={colorMode.toggleColorMode}
             sx={{ ml: 1, color: colors.grey[100] }}
@@ -238,6 +264,7 @@ function Topbar(props) {
                     >
                       {item}
                     </Button>
+
                     <Menu
                       anchorEl={anchorEl}
                       open={Boolean(anchorEl)}
@@ -246,17 +273,22 @@ function Topbar(props) {
                       <MenuItem onClick={() => handleNavigate(getRotaComparacao())}>
                         Comparação (PF x PJ)
                       </MenuItem>
+
                       <Divider />
+
                       <MenuItem onClick={() => handleNavigate(getRotaPF())}>
                         Pessoa Física
                       </MenuItem>
+
                       <MenuItem onClick={() => handleNavigate(getRotaPJ())}>
                         Pessoa Jurídica
                       </MenuItem>
                     </Menu>
                   </React.Fragment>
                 );
-              } else if (item === "Sair") {
+              }
+
+              if (item === "Sair") {
                 return (
                   <Button
                     key={item}
@@ -285,7 +317,9 @@ function Topbar(props) {
                     {item}
                   </Button>
                 );
-              } else if (item === "Tributação") {
+              }
+
+              if (item === "Tributação") {
                 return (
                   <Button
                     key={item}
@@ -314,7 +348,9 @@ function Topbar(props) {
                     {item}
                   </Button>
                 );
-              } else if (item === "Página Inicial") {
+              }
+
+              if (item === "Página Inicial") {
                 return (
                   <Button
                     key={item}
@@ -338,45 +374,46 @@ function Topbar(props) {
                         width: "100%",
                       },
                     }}
-                    onClick={() => navigate("/Home")}
-                  >
-                    {item}
-                  </Button>
-                );
-              } else {
-                return (
-                  <Button
-                    key={item}
-                    onClick={() => navigate(`/${item.toLowerCase()}`)}
-                    sx={{
-                      position: "relative",
-                      color: colors.grey[100],
-                      "&:hover": {
-                        backgroundColor: colors.primary[300],
-                      },
-                      "&::after": {
-                        content: '""',
-                        position: "absolute",
-                        left: 0,
-                        bottom: 0,
-                        width: 0,
-                        height: "2px",
-                        backgroundColor: "#2563eb",
-                        transition: "width 0.3s ease",
-                      },
-                      "&:hover::after": {
-                        width: "100%",
-                      },
-                    }}
+                    onClick={() => navigate("/home")}
                   >
                     {item}
                   </Button>
                 );
               }
+
+              return (
+                <Button
+                  key={item}
+                  onClick={() => navigate(`/${item.toLowerCase()}`)}
+                  sx={{
+                    position: "relative",
+                    color: colors.grey[100],
+                    "&:hover": {
+                      backgroundColor: colors.primary[300],
+                    },
+                    "&::after": {
+                      content: '""',
+                      position: "absolute",
+                      left: 0,
+                      bottom: 0,
+                      width: 0,
+                      height: "2px",
+                      backgroundColor: "#2563eb",
+                      transition: "width 0.3s ease",
+                    },
+                    "&:hover::after": {
+                      width: "100%",
+                    },
+                  }}
+                >
+                  {item}
+                </Button>
+              );
             })}
           </Box>
         </Toolbar>
       </AppBar>
+
       <nav>
         <Drawer
           container={container}
@@ -396,6 +433,7 @@ function Topbar(props) {
           {drawer}
         </Drawer>
       </nav>
+
       <Box component="main" sx={{ p: 3 }}>
         <Toolbar />
       </Box>
