@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef, forwardRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import { tokens } from "../../Tema";
 import { useForm } from "react-hook-form";
 import {
@@ -70,6 +71,27 @@ const CalculadoraTributaria = () => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
+
+  // Referência para o componente que será impresso
+  const componentRef = useRef();
+
+  // Função para imprimir os resultados
+  const resultPrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: "Relatório de Tributação - Calculadora PF x PJ",
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 20mm;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact;
+          color-adjust: exact;
+        }
+      }
+    `,
+  });
 
   // Constantes de limites e valores de referência
   const SALARIO_MINIMO = 1518.0;
@@ -234,6 +256,89 @@ const CalculadoraTributaria = () => {
     showAlert("Resultados enviados para seu email.", "success");
   };
 
+  // Componente para impressão (apenas os resultados)
+  const PrintableResults = forwardRef((props, ref) => (
+    <div ref={ref} style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <h1 style={{ textAlign: 'center', marginBottom: '30px', color: '#1976d2' }}>
+        Relatório de Tributação - Calculadora PF x PJ
+      </h1>
+
+      <div style={{ marginBottom: '20px', textAlign: 'center', fontSize: '14px' }}>
+        <p><strong>Data do Cálculo:</strong> {new Date().toLocaleDateString('pt-BR')}</p>
+        <p><strong>Profissão:</strong> {watch("profissao")}</p>
+      </div>
+
+      {/* Resultados PF */}
+      <div style={{ marginBottom: '30px', border: '2px solid #1976d2', padding: '20px', borderRadius: '8px' }}>
+        <h2 style={{ color: '#1976d2', marginBottom: '15px' }}>Pessoa Física (IRPF)</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+          <div><strong>Renda Mensal:</strong> {formatMoney(resultadoPF.renda)}</div>
+          <div><strong>Custos Mensais:</strong> {formatMoney(resultadoPF.custos)}</div>
+          <div><strong>Base de Cálculo:</strong> {formatMoney(resultadoPF.baseCalculo)}</div>
+          <div><strong>Faixa de Tributação:</strong> {resultadoPF.faixa}</div>
+          <div><strong>Alíquota:</strong> {resultadoPF.aliquota}%</div>
+          <div><strong>Parcela a Deduzir:</strong> {formatMoney(resultadoPF.parcelaADeduzir)}</div>
+          <div><strong>Alíquota Efetiva:</strong> {resultadoPF.aliquotaEfetiva.toFixed(2)}%</div>
+          <div style={{ color: '#d32f2f' }}><strong>Imposto de Renda (IR):</strong> {formatMoney(resultadoPF.imposto)}</div>
+          <div style={{ color: '#2e7d32' }}><strong>Renda Líquida:</strong> {formatMoney(resultadoPF.rendaLiquida)}</div>
+        </div>
+      </div>
+
+      {/* Resultados PJ */}
+      <div style={{ marginBottom: '30px', border: '2px solid #388e3c', padding: '20px', borderRadius: '8px' }}>
+        <h2 style={{ color: '#388e3c', marginBottom: '15px' }}>Pessoa Jurídica (PJ)</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+          <div><strong>Renda Mensal:</strong> {formatMoney(resultadoPJ.renda)}</div>
+          <div><strong>Pró-labore:</strong> {formatMoney(resultadoPJ.proLabore)}</div>
+          <div><strong>Simples Nacional (6%):</strong> {formatMoney(resultadoPJ.simplesNacional)}</div>
+          <div><strong>INSS (11% sobre pró-labore):</strong> {formatMoney(resultadoPJ.inss)}</div>
+          <div><strong>IR sobre pró-labore:</strong> {formatMoney(resultadoPJ.irProLabore)}</div>
+          <div style={{ color: '#d32f2f' }}><strong>Total de Tributos:</strong> {formatMoney(resultadoPJ.totalPJ)}</div>
+          <div style={{ color: '#2e7d32' }}><strong>Renda Líquida:</strong> {formatMoney(resultadoPJ.rendaLiquida)}</div>
+        </div>
+      </div>
+
+      {/* Comparação */}
+      <div style={{ border: '2px solid #f57c00', padding: '20px', borderRadius: '8px' }}>
+        <h2 style={{ color: '#f57c00', marginBottom: '15px', textAlign: 'center' }}>Comparação PF x PJ</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+          <div style={{ textAlign: 'center', padding: '15px', border: '1px solid #1976d2', borderRadius: '8px' }}>
+            <h3 style={{ color: '#1976d2', marginBottom: '10px' }}>Pessoa Física (PF)</h3>
+            <div><strong>Tributos Totais:</strong> <span style={{ color: '#d32f2f' }}>{formatMoney(resultadoPF.imposto)}</span></div>
+            <div><strong>Renda Líquida:</strong> <span style={{ color: '#2e7d32' }}>{formatMoney(resultadoPF.rendaLiquida)}</span></div>
+            <div><strong>Alíquota Efetiva:</strong> {resultadoPF.aliquotaEfetiva.toFixed(2)}%</div>
+          </div>
+
+          <div style={{ textAlign: 'center', padding: '15px', border: '1px solid #388e3c', borderRadius: '8px' }}>
+            <h3 style={{ color: '#388e3c', marginBottom: '10px' }}>Pessoa Jurídica (PJ)</h3>
+            <div><strong>Tributos Totais:</strong> <span style={{ color: '#d32f2f' }}>{formatMoney(resultadoPJ.totalPJ)}</span></div>
+            <div><strong>Renda Líquida:</strong> <span style={{ color: '#2e7d32' }}>{formatMoney(resultadoPJ.rendaLiquida)}</span></div>
+            <div><strong>Alíquota Total:</strong> {((resultadoPJ.totalPJ / resultadoPJ.renda) * 100).toFixed(2)}%</div>
+          </div>
+
+          <div style={{ textAlign: 'center', padding: '15px', border: '2px solid #f57c00', borderRadius: '8px' }}>
+            <h3 style={{ marginBottom: '10px' }}>Recomendação</h3>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>
+              {resultadoPF.rendaLiquida > resultadoPJ.rendaLiquida
+                ? "Pessoa Física (PF) é mais vantajosa!"
+                : "Pessoa Jurídica (PJ) é mais vantajosa!"}
+            </div>
+            <div><strong>Economia de:</strong> {formatMoney(Math.abs(resultadoPF.rendaLiquida - resultadoPJ.rendaLiquida))} por mês</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: '30px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px', fontSize: '12px' }}>
+        <h4 style={{ marginBottom: '10px' }}>Observações Importantes:</h4>
+        <ul style={{ margin: 0, paddingLeft: '20px' }}>
+          <li>Os cálculos são baseados na legislação atual (2025)</li>
+          <li>Pessoa Jurídica terá custos adicionais de contabilidade</li>
+          <li>Consulte um contador para análise personalizada</li>          
+        </ul>
+      </div>
+    </div>
+  ));
+
   return (
     <Box
       sx={{
@@ -243,6 +348,10 @@ const CalculadoraTributaria = () => {
         minHeight: "70vh",
       }}
     >
+      {/* Componente invisível para impressão */}
+      <div style={{ display: 'none' }}>
+        <PrintableResults ref={componentRef} />
+      </div>
       <Typography
         variant="h4"
         align="center"
@@ -509,14 +618,34 @@ const CalculadoraTributaria = () => {
       {/* Resultados */}
       {mostrarResultados && resultadoPF && resultadoPJ && (
         <Box>
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-            align="center"
-            sx={{ m: 3 }}
-          >
-            Comparação de Resultados
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              align="center"
+              sx={{ flex: 1 }}
+            >
+              Comparação de Resultados
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={resultPrint}
+              sx={{
+                backgroundColor: colors.blueAccent[500],
+                color: colors.grey[900],
+                fontWeight: "bold",
+                "&:hover": {
+                  backgroundColor: colors.blueAccent[600],
+                  transform: "translateY(-2px)",
+                  boxShadow: 3,
+                },
+                transition: "all 0.3s ease",
+              }}
+              startIcon={<span style={{ fontSize: '18px' }}>🖨️</span>}
+            >
+              Imprimir PDF
+            </Button>
+          </Box>
 
           {/* Tabs para alternar entre PF e PJ */}
           <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
