@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { tokens } from "../../Tema";
 import { useForm } from "react-hook-form";
+import { useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import {
   Box,
   useTheme,
@@ -24,6 +26,15 @@ import CustosTooltip from "../../Components/CustosTooltip";
 const CalculadoraTributariaArq = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+
+  // Ref para impressão dos resultados
+  const componentRef = useRef(null);
+
+  // Handler que dispara a impressão dos resultados
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: "Resultado_Calculadora_Tributaria",
+  });
 
   const {
     register,
@@ -374,8 +385,27 @@ const CalculadoraTributariaArq = () => {
       </Paper>
 
       {mostrarResultados && resultadoPF && resultadoPJ && (
-        <Box>
+        <Box ref={componentRef} sx={{ mt: 4 }}>
           <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2, mt: 4 }}>
+
+           {/* Botão para baixar/imprimir os resultados em PDF */}
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Button
+              variant="contained"
+              onClick={handlePrint}
+              sx={{
+                backgroundColor: colors.blueAccent[500],
+                color: "#fff",
+                fontWeight: "bold",
+                "&:hover": {
+                  backgroundColor: colors.blueAccent[600],
+                },
+              }}
+            >
+              Baixar PDF
+            </Button>
+          </Box>
+
             <Tabs
               value={tabValue}
               onChange={handleTabChange}
@@ -583,7 +613,8 @@ const CalculadoraTributariaArq = () => {
               gap: 2,
               alignItems: "center",
             }}
-          >
+          >         
+
             <FormControlLabel
               control={<Checkbox {...register("enviarEmail")} />}
               label="Receber por e-mail?"

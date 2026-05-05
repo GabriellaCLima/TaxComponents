@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { tokens } from "../../Tema";
 import { useForm } from "react-hook-form";
+import { useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import {
   Box,
   useTheme,
@@ -32,6 +34,15 @@ import CustosTooltip from "../../Components/CustosTooltip";
 const CalculadoraTributaria = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+
+  // Ref para impressão dos resultados
+  const componentRef = useRef(null);
+
+  // Handler que dispara a impressão dos resultados
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: "Resultado_Calculadora_Tributaria",
+  });
 
   // Configuração do formulário com react-hook-form
   const {
@@ -507,8 +518,8 @@ const CalculadoraTributaria = () => {
       </Paper>
 
       {/* Resultados */}
-      {mostrarResultados && resultadoPF && resultadoPJ && (
-        <Box>
+      {mostrarResultados && resultadoPF && resultadoPJ && ( 
+        <Box ref={componentRef} sx={{ mt: 4 }}>
           <Typography
             variant="h4"
             fontWeight="bold"
@@ -517,6 +528,24 @@ const CalculadoraTributaria = () => {
           >
             Comparação de Resultados
           </Typography>
+
+          {/* Botão para baixar/imprimir os resultados em PDF */}
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Button
+              variant="contained"
+              onClick={handlePrint}
+              sx={{
+                backgroundColor: colors.blueAccent[500],
+                color: "#fff",
+                fontWeight: "bold",
+                "&:hover": {
+                  backgroundColor: colors.blueAccent[600],
+                },
+              }}
+            >
+              Baixar PDF
+            </Button>
+          </Box>
 
           {/* Tabs para alternar entre PF e PJ */}
           <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
