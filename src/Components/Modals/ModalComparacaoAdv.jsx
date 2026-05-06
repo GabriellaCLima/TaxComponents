@@ -102,6 +102,14 @@ const ModalComparacaoAdv = () => {
     setTimeout(() => { setAlertVisible(false); }, 3000);
   };
 
+  const enviarEmail = (pf, pj) => {
+    const emailUsuario = watch("emailUsuario");
+    console.log("Enviando e-mail para", emailUsuario);
+    console.log("Resultados PF:", pf);
+    console.log("Resultados PJ:", pj);
+    showAlert("Resultados enviados para seu email.", "success");
+  };
+
   const calcularPF = (renda, custos) => {
     const descontoSimplificado = 607.20;
     const deducaoBase = Math.max(custos, descontoSimplificado);
@@ -320,6 +328,50 @@ const ModalComparacaoAdv = () => {
                       Economia de: <strong>{formatMoney(Math.abs(resultadoPF.rendaLiquida - resultadoPJ.rendaLiquida))}</strong> por mês
                     </Typography>
                   </Paper>
+                  </Box>
+
+                  <Box sx={{ mt: 1, display: "flex", gap: 2, alignItems: "center", flexWrap: { xs: "wrap", md: "nowrap" } }}>
+                    <FormControlLabel
+                      control={<Checkbox {...register("enviarEmail")} />}
+                      label="Receber por e-mail?"
+                    />
+
+                    <Grow in={watch("enviarEmail")}>
+                      <Box sx={{ display: "flex", gap: 1, flex: 1, minWidth: { xs: "100%", md: "auto" } }}>
+                        <TextField
+                          size="small"
+                          label="E-mail"
+                          type="email"
+                          fullWidth
+                          {...register("emailUsuario", {
+                            required: watch("enviarEmail") ? "E-mail é obrigatório" : false,
+                            pattern: {
+                              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                              message: "E-mail inválido",
+                            },
+                          })}
+                          error={!!errors.emailUsuario}
+                        />
+                        <Button
+                          variant="contained"
+                          onClick={() => {
+                            const emailValue = watch("emailUsuario");
+                            if (!emailValue || emailValue.trim() === "") {
+                              showAlert("Por favor, informe seu e-mail", "error");
+                              return;
+                            }
+                            if (errors.emailUsuario) {
+                              showAlert("Por favor, informe um e-mail válido", "error");
+                              return;
+                            }
+                            enviarEmail(resultadoPF, resultadoPJ);
+                          }}
+                          sx={{ bgcolor: colors.redAccent[500], whiteSpace: "nowrap" }}
+                        >
+                          Enviar
+                        </Button>
+                      </Box>
+                    </Grow>
                   </Box>
                 </Box>
               )}
