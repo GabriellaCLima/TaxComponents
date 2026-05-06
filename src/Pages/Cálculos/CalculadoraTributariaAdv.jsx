@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { tokens } from "../../Tema";
 import { useForm } from "react-hook-form";
-import { useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import {
   Box,
@@ -36,7 +35,7 @@ const CalculadoraTributariaAdv = () => {
 
   // Handler que dispara a impressão dos resultados
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
     documentTitle: "Resultado_Calculadora_Tributaria",
   });
 
@@ -191,7 +190,7 @@ const CalculadoraTributariaAdv = () => {
     showAlert("Cálculos realizados com sucesso!", "success");
   };
 
-  const enviarEmail = (pf, pj) => {
+  const enviarEmail = () => {
     const emailUsuario = watch("emailUsuario");
     console.log("Enviando e-mail para", emailUsuario);
     showAlert("Resultados enviados para seu email.", "success");
@@ -312,27 +311,35 @@ const CalculadoraTributariaAdv = () => {
 
       {/* Resultados */}
       {mostrarResultados && resultadoPF && resultadoPJ && (
-        <Box ref={componentRef} sx={{ mt: 4 }}>
-          <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2, mt: 4 }}>
-
-              {/* Botão para baixar/imprimir os resultados em PDF */}
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+        <Box sx={{ mt: 4 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              mb: 3,
+            }}
+          >
             <Button
               variant="contained"
+              type="button"
               onClick={handlePrint}
               sx={{
                 backgroundColor: colors.blueAccent[500],
                 color: "#fff",
                 fontWeight: "bold",
+                px: 4,
+                py: 1.2,
                 "&:hover": {
                   backgroundColor: colors.blueAccent[600],
                 },
               }}
             >
-              Baixar PDF
+              Imprimir resultado em PDF
             </Button>
           </Box>
 
+          <Box ref={componentRef}>
+          <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2, mt: 4 }}>
             <Tabs
               value={tabValue}
               onChange={handleTabChange}
@@ -431,9 +438,10 @@ const CalculadoraTributariaAdv = () => {
             <Grow in={watch("enviarEmail")}>
               <Box sx={{ display: "flex", gap: 1, flex: 1 }}>
                 <TextField size="small" label="E-mail" fullWidth {...register("emailUsuario")} />
-                <Button onClick={() => enviarEmail(resultadoPF, resultadoPJ)} variant="contained" sx={{ bgcolor: colors.redAccent[500] }}>Enviar</Button>
+                <Button onClick={enviarEmail} variant="contained" sx={{ bgcolor: colors.redAccent[500] }}>Enviar</Button>
               </Box>
             </Grow>
+          </Box>
           </Box>
         </Box>
       )}

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useReactToPrint } from "react-to-print";
 import {
   Box,
   Modal,
@@ -23,6 +24,12 @@ import CalculateIcon from "@mui/icons-material/Calculate";
 const ModalComparacaoArq = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const componentRef = useRef(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: "Resultado_Calculadora_Tributaria_Arquitetura",
+  });
 
   const [open, setOpen] = useState(false);
   const [transformOrigin, setTransformOrigin] = useState("center center");
@@ -362,6 +369,30 @@ const ModalComparacaoArq = () => {
 
               {mostrarResultados && resultadoPF && resultadoPJ && (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Box sx={{ display: "flex", justifyContent: "center" }}>
+                    <Button
+                      variant="contained"
+                      type="button"
+                      onClick={handlePrint}
+                      sx={{
+                        backgroundColor: colors.blueAccent[500],
+                        color: "#fff",
+                        fontWeight: "bold",
+                        px: 3,
+                        py: 1,
+                        "&:hover": {
+                          backgroundColor: colors.blueAccent[600],
+                        },
+                      }}
+                    >
+                      Imprimir resultado em PDF
+                    </Button>
+                  </Box>
+
+                  <Box
+                    ref={componentRef}
+                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                  >
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
                       <Paper
@@ -457,6 +488,7 @@ const ModalComparacaoArq = () => {
                         : "Pessoa Jurídica (PJ) é mais vantajosa!"}
                     </Typography>
                   </Paper>
+                  </Box>
                 </Box>
               )}
 

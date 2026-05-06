@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useReactToPrint } from "react-to-print";
 import {
   Box,
   Modal,
@@ -27,6 +28,12 @@ import Info from "@mui/icons-material/Info";
 const ModalComparacaoAdv = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const componentRef = useRef(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: "Resultado_Calculadora_Tributaria_Advocacia",
+  });
 
   // CONTROLE DE ESTADO DO MODAL
   const [open, setOpen] = useState(false);
@@ -93,11 +100,6 @@ const ModalComparacaoAdv = () => {
     setAlertSeverity(severity);
     setAlertVisible(true);
     setTimeout(() => { setAlertVisible(false); }, 3000);
-  };
-
-  const enviarEmail = (pf, pj) => {
-    console.log("Enviando e-mail para", watch("emailUsuario"));
-    showAlert("Resultados enviados para seu email.", "success");
   };
 
   const calcularPF = (renda, custos) => {
@@ -269,6 +271,27 @@ const ModalComparacaoAdv = () => {
 
               {mostrarResultados && resultadoPF && resultadoPJ && (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Box sx={{ display: "flex", justifyContent: "center" }}>
+                    <Button
+                      variant="contained"
+                      type="button"
+                      onClick={handlePrint}
+                      sx={{
+                        backgroundColor: colors.blueAccent[500],
+                        color: "#fff",
+                        fontWeight: "bold",
+                        px: 3,
+                        py: 1,
+                        "&:hover": {
+                          backgroundColor: colors.blueAccent[600],
+                        },
+                      }}
+                    >
+                      Imprimir resultado em PDF
+                    </Button>
+                  </Box>
+
+                  <Box ref={componentRef} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <Grid container spacing={2}>
                     <Grid size={{ xs: 12, md: 6 }}>
                       <Paper sx={{ p: 2, backgroundColor: colors.primary[200], border: `2px solid ${colors.blueAccent[500]}`, textAlign: "center", height: "100%" }}>
@@ -297,6 +320,7 @@ const ModalComparacaoAdv = () => {
                       Economia de: <strong>{formatMoney(Math.abs(resultadoPF.rendaLiquida - resultadoPJ.rendaLiquida))}</strong> por mês
                     </Typography>
                   </Paper>
+                  </Box>
                 </Box>
               )}
 

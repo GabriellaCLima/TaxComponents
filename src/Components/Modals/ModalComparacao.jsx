@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useReactToPrint } from "react-to-print";
 import {
   Box,
   Modal,
@@ -29,6 +30,12 @@ import CalculateIcon from "@mui/icons-material/Calculate";
 const ModalComparacao = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const componentRef = useRef(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: "Resultado_Calculadora_Tributaria",
+  });
 
   // CONTROLE DE ESTADO DO MODAL
   const [open, setOpen] = useState(false);
@@ -532,7 +539,36 @@ const ModalComparacao = () => {
               {/* SEÇÃO DE RESULTADOS (APÓS CÁLCULO) */}
               {mostrarResultados && resultadoPF && resultadoPJ && (
                 <Box>
-                  <Paper sx={{ p: 3, backgroundColor: colors.primary[500] }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      mb: 2,
+                    }}
+                  >
+                    <Button
+                      variant="contained"
+                      type="button"
+                      onClick={handlePrint}
+                      sx={{
+                        backgroundColor: colors.blueAccent[500],
+                        color: "#fff",
+                        fontWeight: "bold",
+                        px: 3,
+                        py: 1,
+                        "&:hover": {
+                          backgroundColor: colors.blueAccent[600],
+                        },
+                      }}
+                    >
+                      Imprimir resultado em PDF
+                    </Button>
+                  </Box>
+
+                  <Paper
+                    ref={componentRef}
+                    sx={{ p: 3, backgroundColor: colors.primary[500] }}
+                  >
                     <Typography
                       variant="h6"
                       sx={{ mb: 3, textAlign: "center" }}
