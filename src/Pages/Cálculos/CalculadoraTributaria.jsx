@@ -471,6 +471,7 @@ const CalculadoraTributaria = () => {
                 >
                   <MenuItem value="Psicólogo">Psicólogo(a)</MenuItem>
                   <MenuItem value="Arquiteto">Arquiteto(a)</MenuItem>
+                  <MenuItem value="Advogado">Advogado(a)</MenuItem>
                 </Select>
               </FormControl>
             </Box>
