@@ -143,23 +143,10 @@ const CalculadoraTributariaArq = () => {
     const simplesNacional = renda * 0.06;
     const inss = proLabore * 0.11;
 
-    let irProLabore = 0;
+    // IRRF: Isento conforme legislação para arquitetos (Anexo III)
+    const irProLabore = 0;
 
-    if (proLabore <= 2428.8) {
-      irProLabore = 0;
-    } else if (proLabore <= 2826.65) {
-      irProLabore = proLabore * 0.075 - 182.16;
-    } else if (proLabore <= 3751.05) {
-      irProLabore = proLabore * 0.15 - 394.16;
-    } else if (proLabore <= 4664.68) {
-      irProLabore = proLabore * 0.225 - 675.49;
-    } else {
-      irProLabore = proLabore * 0.275 - 908.73;
-    }
-
-    irProLabore = Math.max(0, irProLabore);
-
-    const totalPJ = simplesNacional + inss + irProLabore;
+    const totalPJ = simplesNacional + inss;
 
     return {
       renda,

@@ -104,92 +104,81 @@ const CalculadoraTributaria = () => {
     }, 3000);
   };
 
-  // Cálculo de tributação para Pessoa Física (IRPF)
+  // Cálculo de tributação para Pessoa Física (IRPF) - Psicólogo
   const calcularPF = (renda, custos) => {
-    // Base de cálculo = Renda bruta - despesas dedutíveis
-    const baseCalculo = renda - custos;
-    let imposto = 0;
+    // Desconto simplificado obrigatório para psicólogos
+    const descontoSimplificado = 607.20;
+    const deducaoBase = Math.max(custos, descontoSimplificado);
+    let baseCalculo = Math.max(0, renda - deducaoBase);
+
     let aliquota = 0;
     let parcelaADeduzir = 0;
-    let faixa = "";
 
-    // Tabela Progressiva do IRPF mensal 2025
+    // Tabela Progressiva do IRPF mensal 2026
     if (baseCalculo <= 2428.8) {
-      imposto = 0;
       aliquota = 0;
       parcelaADeduzir = 0;
-      faixa = "Até R$ 2.428,80";
     } else if (baseCalculo <= 2826.65) {
       aliquota = 7.5;
       parcelaADeduzir = 182.16;
-      imposto = baseCalculo * 0.075 - parcelaADeduzir;
-      faixa = "De R$ 2.428,81 até R$ 2.826,65";
     } else if (baseCalculo <= 3751.05) {
       aliquota = 15;
       parcelaADeduzir = 394.16;
-      imposto = baseCalculo * 0.15 - parcelaADeduzir;
-      faixa = "De R$ 2.826,66 até R$ 3.751,05";
     } else if (baseCalculo <= 4664.68) {
       aliquota = 22.5;
       parcelaADeduzir = 675.49;
-      imposto = baseCalculo * 0.225 - parcelaADeduzir;
-      faixa = "De R$ 3.751,06 até R$ 4.664,68";
     } else {
-      // Faixa 27,5%
       aliquota = 27.5;
       parcelaADeduzir = 908.73;
-      imposto = baseCalculo * 0.275 - parcelaADeduzir;
-      faixa = "Acima de R$ 4.664,68";
     }
 
-    // Calcula renda líquida e alíquota efetiva
-    const rendaLiquida = renda - imposto;
-    const aliquotaEfetiva = renda > 0 ? (imposto / renda) * 100 : 0;
+    let impostoCalculado = (baseCalculo * (aliquota / 100)) - parcelaADeduzir;
+    impostoCalculado = Math.max(0, impostoCalculado);
+
+    // Aplicar redutor para rendimentos até R$ 7.350
+    let redutor = 0;
+    if (renda <= 5000) {
+      redutor = 312.89;
+    } else if (renda <= 7350) {
+      redutor = 978.62 - (0.133145 * renda);
+    }
+    redutor = Math.max(0, redutor);
+
+    let impostoFinal = Math.max(0, impostoCalculado - redutor);
+    const rendaLiquida = renda - impostoFinal;
+    const aliquotaEfetiva = renda > 0 ? (impostoFinal / renda) * 100 : 0;
 
     // Retorna todos os dados calculados
     return {
       renda,
       custos,
       baseCalculo,
-      faixa,
       aliquota,
       parcelaADeduzir,
-      imposto: Math.max(0, imposto), // Garante que imposto nunca seja negativo
+      imposto: impostoFinal,
       rendaLiquida,
       aliquotaEfetiva,
     };
   };
 
-  // Cálculo de tributação para Pessoa Jurídica (PJ)
+  // Cálculo de tributação para Pessoa Jurídica (PJ) - Psicólogo
   const calcularPJ = (renda) => {
     // Simples Nacional (Anexo III): 6% sobre a renda mensal
     const simplesNacional = renda * 0.06;
 
-    // Pró-labore: maior valor entre 28% da renda ou salário mínimo vigente
+    // Pró-labore: 28% da renda (mínimo salário mínimo vigente)
     const proLabore28 = renda * 0.28;
     const proLabore = Math.max(proLabore28, SALARIO_MINIMO);
 
     // INSS sobre pró-labore: 11% do valor do pró-labore
     const inss = proLabore * 0.11;
 
-    // IR sobre pró-labore aplica a mesma tabela progressiva da PF
-    let irProLabore = 0;
-    if (proLabore <= 2428.8) {
-      irProLabore = 0;
-    } else if (proLabore <= 2826.65) {
-      irProLabore = proLabore * 0.075 - 182.16;
-    } else if (proLabore <= 3751.05) {
-      irProLabore = proLabore * 0.15 - 394.16;
-    } else if (proLabore <= 4664.68) {
-      irProLabore = proLabore * 0.225 - 675.49;
-    } else {
-      irProLabore = proLabore * 0.275 - 908.73;
-    }
+    // IRRF: Isento conforme legislação para psicólogos (Anexo III)
+    const irProLabore = 0;
 
-    irProLabore = Math.max(0, irProLabore); // Garante que IR nunca seja negativo
-
-    // Total de tributos PJ (Simples Nacional + INSS + IR)
-    const totalPJ = simplesNacional + inss + irProLabore;
+    // Total de tributos PJ (Simples Nacional + INSS)
+    // CPP já está incluída no DAS para psicólogos
+    const totalPJ = simplesNacional + inss;
     const rendaLiquida = renda - totalPJ;
 
     // Retorna todos os dados calculados

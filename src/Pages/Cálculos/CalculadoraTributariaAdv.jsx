@@ -148,16 +148,13 @@ const CalculadoraTributariaAdv = () => {
     const proLabore = SALARIO_MINIMO;
     const simplesNacional = renda * 0.045; // 4.5%
     const inss = proLabore * 0.11;
-    const cpp = proLabore * 0.20; // 20% Patronal
+    const cpp = proLabore * 0.20; // 20% Patronal CPP
 
-    let irProLabore = 0;
-    if (proLabore > 2428.8) {
-      // Como o salário mínimo é 1621, o IR será 0, mas mantemos a lógica para garantir
-      irProLabore = proLabore * 0.075 - 182.16;
-    }
-    irProLabore = Math.max(0, irProLabore);
+    // IRRF: Isento conforme legislação para advogados (Anexo IV)
+    const irProLabore = 0;
 
-    const totalPJ = simplesNacional + inss + cpp + irProLabore;
+    // Total: DAS + INSS (desconto) + CPP (patronal)
+    const totalPJ = simplesNacional + inss + cpp;
     const rendaLiquida = renda - totalPJ;
 
     return {
