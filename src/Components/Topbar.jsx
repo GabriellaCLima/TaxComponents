@@ -28,7 +28,7 @@ import Logo from "../../Assets/NAF.png";
 const drawerWidth = 240;
 
 // Itens do menu de navegação
-const navItems = ["Página Inicial", "Tributação", "Contatos", "Cálculo", "Sair"];
+const navItems = ["Página Inicial", "Tributação", "Contatos", "Sair"];
 
 function Topbar(props) {
   const theme = useTheme();
