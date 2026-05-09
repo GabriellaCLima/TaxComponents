@@ -12,10 +12,7 @@ import {
   Grid,
   FormControlLabel,
   Checkbox,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  // removido Select/FormControl de profissão (campo eliminado)
   InputAdornment,
   Alert,
   Collapse,
@@ -79,7 +76,6 @@ const ModalComparacao = () => {
     defaultValues: {
       rendaMensal: "",
       custosMensais: "",
-      profissao: "",
       enviarEmail: false,
       emailUsuario: "",
     },
@@ -87,10 +83,7 @@ const ModalComparacao = () => {
 
   // OBSERVAÇÃO DOS CAMPOS PARA VALIDAÇÃO EM TEMPO REAL
   const watchedFields = watch();
-  const areAllFieldsFilled =
-    watchedFields.rendaMensal &&
-    watchedFields.custosMensais &&
-    watchedFields.profissao;
+  const areAllFieldsFilled = watchedFields.rendaMensal && watchedFields.custosMensais;
 
   // CONTROLE DE ESTADO DO BOTÃO DE CÁLCULO
   const isButtonDisabled = !areAllFieldsFilled;
@@ -452,56 +445,7 @@ const ModalComparacao = () => {
                       }}
                     />
 
-                    {/* CAMPO PROFISSÃO */}
-                    <FormControl sx={{ flex: 1, minWidth: 200 }}>
-                      <InputLabel
-                        sx={{
-                          color: colors.grey[300],
-                          "&.Mui-focused": {
-                            color: colors.blueAccent[500],
-                          },
-                          "&.MuiInputLabel-shrink": {
-                            color: colors.blueAccent[500],
-                          },
-                        }}
-                      >
-                        Profissão
-                      </InputLabel>
-                      <Select
-                        label="Profissão"
-                        {...register("profissao", {
-                          required: "Profissão é obrigatória!",
-                        })}
-                        error={!!errors.profissao}
-                        defaultValue=""
-                        sx={{
-                          minHeight: "56px",
-                          backgroundColor: colors.primary[500],
-                          "& .MuiOutlinedInput-notchedOutline": {
-                            borderColor: errors.profissao
-                              ? colors.redAccent[400]
-                              : colors.grey[300],
-                          },
-                          "&:hover .MuiOutlinedInput-notchedOutline": {
-                            borderColor: colors.blueAccent[500],
-                          },
-                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                            borderColor: colors.blueAccent[500],
-                          },
-                          "& .MuiSelect-select": {
-                            color: colors.grey[100],
-                            padding: "16.5px 14px",
-                            display: "flex",
-                            alignItems: "center",
-                            minHeight: "auto",
-                          },
-                        }}
-                      >
-                        <MenuItem value="Psicólogo">Psicólogo(a)</MenuItem>
-                        <MenuItem value="Arquiteto">Arquiteto(a)</MenuItem>
-                        <MenuItem value="Advogado">Advogado(a)</MenuItem>
-                      </Select>
-                    </FormControl>
+                    {/* Profissão removida: cálculo comparativo usa lógica padrão */}
                   </Box>
 
                   {/* BOTÃO CALCULAR COMPARAÇÃO */}
