@@ -96,9 +96,10 @@ const ModalComparacao = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
 
-  // CONSTANTES PARA CÁLCULOS TRIBUTÁRIOS
-  const SALARIO_MINIMO = 1518.0;
+  // CONSTANTES PARA CÁLCULOS TRIBUTÁRIOS (ATUALIZADO 2026)
+  const SALARIO_MINIMO = 1621.0;
   const LIMITE_RENDA = 15000.0;
+  const DESCONTO_SIMPLIFICADO = 607.20;
 
   // FUNÇÃO DE FORMATAÇÃO MONETÁRIA
   const formatMoney = (value) => {
@@ -130,42 +131,53 @@ const ModalComparacao = () => {
 
   // CÁLCULO DE PESSOA FÍSICA (IMPOSTO DE RENDA)
   const calcularPF = (renda, custos) => {
-    const baseCalculo = renda - custos;
-    let imposto = 0;
+    // Escolhe entre os custos reais ou o desconto simplificado (o que for maior)
+    const deducaoBase = Math.max(custos, DESCONTO_SIMPLIFICADO);
+    const baseCalculo = Math.max(0, renda - deducaoBase);
+    
+    let impostoCalculado = 0;
     let aliquota = 0;
     let parcelaADeduzir = 0;
     let faixa = "";
 
-    // TABELA PROGRESSIVA DO IRPF 2024
+    // TABELA PROGRESSIVA DO IRPF 2026
     if (baseCalculo <= 2428.8) {
-      imposto = 0;
       aliquota = 0;
       parcelaADeduzir = 0;
       faixa = "Até R$ 2.428,80";
     } else if (baseCalculo <= 2826.65) {
       aliquota = 7.5;
       parcelaADeduzir = 182.16;
-      imposto = baseCalculo * 0.075 - parcelaADeduzir;
       faixa = "De R$ 2.428,81 até R$ 2.826,65";
     } else if (baseCalculo <= 3751.05) {
       aliquota = 15;
       parcelaADeduzir = 394.16;
-      imposto = baseCalculo * 0.15 - parcelaADeduzir;
       faixa = "De R$ 2.826,66 até R$ 3.751,05";
     } else if (baseCalculo <= 4664.68) {
       aliquota = 22.5;
       parcelaADeduzir = 675.49;
-      imposto = baseCalculo * 0.225 - parcelaADeduzir;
       faixa = "De R$ 3.751,06 até R$ 4.664,68";
     } else {
       aliquota = 27.5;
       parcelaADeduzir = 908.73;
-      imposto = baseCalculo * 0.275 - parcelaADeduzir;
       faixa = "Acima de R$ 4.664,68";
     }
 
-    const rendaLiquida = renda - imposto;
-    const aliquotaEfetiva = renda > 0 ? (imposto / renda) * 100 : 0;
+    impostoCalculado = (baseCalculo * (aliquota / 100)) - parcelaADeduzir;
+    impostoCalculado = Math.max(0, impostoCalculado);
+
+    // APLICAÇÃO DO REDUTOR 2026
+    let redutor = 0;
+    if (renda <= 5000) {
+      redutor = 312.89;
+    } else if (renda <= 7350) {
+      redutor = 978.62 - (0.133145 * renda);
+    }
+    redutor = Math.max(0, redutor);
+
+    let impostoFinal = Math.max(0, impostoCalculado - redutor);
+    const rendaLiquida = renda - impostoFinal;
+    const aliquotaEfetiva = renda > 0 ? (impostoFinal / renda) * 100 : 0;
 
     return {
       renda,
@@ -174,7 +186,7 @@ const ModalComparacao = () => {
       faixa,
       aliquota,
       parcelaADeduzir,
-      imposto: Math.max(0, imposto),
+      imposto: impostoFinal,
       rendaLiquida,
       aliquotaEfetiva,
     };
@@ -182,26 +194,40 @@ const ModalComparacao = () => {
 
   // CÁLCULO DE PESSOA JURÍDICA (SIMPLES NACIONAL)
   const calcularPJ = (renda) => {
-    const simplesNacional = renda * 0.06; // 6% do Simples Nacional
-    const proLabore28 = renda * 0.28; // 28% para pró-labore
+    const simplesNacional = renda * 0.06; // 6% do Simples Nacional (Anexo III)
+    const proLabore28 = renda * 0.28; // 28% para pró-labore (Fator R)
     const proLabore = Math.max(proLabore28, SALARIO_MINIMO); // Mínimo é salário mínimo
     const inss = proLabore * 0.11; // 11% de INSS sobre pró-labore
 
-    // CÁLCULO DO IR SOBRE PRÓ-LABORE (mesma tabela da PF)
-    let irProLabore = 0;
-    if (proLabore <= 2428.8) {
-      irProLabore = 0;
-    } else if (proLabore <= 2826.65) {
-      irProLabore = proLabore * 0.075 - 182.16;
-    } else if (proLabore <= 3751.05) {
-      irProLabore = proLabore * 0.15 - 394.16;
-    } else if (proLabore <= 4664.68) {
-      irProLabore = proLabore * 0.225 - 675.49;
+    // CÁLCULO DO IR SOBRE PRÓ-LABORE (mesma tabela da PF 2026)
+    let baseCalculoPJ = Math.max(0, proLabore - DESCONTO_SIMPLIFICADO);
+    let irProLaboreCalculado = 0;
+
+    if (baseCalculoPJ <= 2428.8) {
+      irProLaboreCalculado = 0;
+    } else if (baseCalculoPJ <= 2826.65) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.075) - 182.16;
+    } else if (baseCalculoPJ <= 3751.05) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.15) - 394.16;
+    } else if (baseCalculoPJ <= 4664.68) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.225) - 675.49;
     } else {
-      irProLabore = proLabore * 0.275 - 908.73;
+      irProLaboreCalculado = (baseCalculoPJ * 0.275) - 908.73;
     }
 
-    irProLabore = Math.max(0, irProLabore);
+    irProLaboreCalculado = Math.max(0, irProLaboreCalculado);
+
+    // APLICAÇÃO DO REDUTOR 2026 PARA O PRÓ-LABORE
+    let redutorPJ = 0;
+    if (proLabore <= 5000) {
+      redutorPJ = 312.89;
+    } else if (proLabore <= 7350) {
+      redutorPJ = 978.62 - (0.133145 * proLabore);
+    }
+    redutorPJ = Math.max(0, redutorPJ);
+
+    let irProLabore = Math.max(0, irProLaboreCalculado - redutorPJ);
+
     const totalPJ = simplesNacional + inss + irProLabore;
     const rendaLiquida = renda - totalPJ;
 

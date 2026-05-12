@@ -64,8 +64,10 @@ const CalculadoraTributariaArq = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
 
+  // ATUALIZADO 2026
   const SALARIO_MINIMO = 1621.0;
   const LIMITE_RENDA = 15000.0;
+  const DESCONTO_SIMPLIFICADO = 607.20;
 
   const handleTabChange = (event, newValue) => setTabValue(newValue);
 
@@ -83,14 +85,15 @@ const CalculadoraTributariaArq = () => {
     setTimeout(() => setAlertVisible(false), 3000);
   };
 
+  // CÁLCULO DE PESSOA FÍSICA - REGRAS 2026
   const calcularPF = (renda, custos) => {
-    const descontoSimplificado = 607.2;
-    const deducaoBase = Math.max(custos, descontoSimplificado);
+    const deducaoBase = Math.max(custos, DESCONTO_SIMPLIFICADO);
     let baseCalculo = Math.max(0, renda - deducaoBase);
 
     let aliquota = 0;
     let parcelaADeduzir = 0;
 
+    // Tabela Progressiva 2026
     if (baseCalculo <= 2428.8) {
       aliquota = 0;
       parcelaADeduzir = 0;
@@ -113,8 +116,8 @@ const CalculadoraTributariaArq = () => {
       baseCalculo * (aliquota / 100) - parcelaADeduzir
     );
 
+    // Redutor 2026
     let redutor = 0;
-
     if (renda <= 5000) {
       redutor = 312.89;
     } else if (renda <= 7350) {
@@ -137,16 +140,45 @@ const CalculadoraTributariaArq = () => {
     };
   };
 
+  // CÁLCULO DE PESSOA JURÍDICA - REGRAS 2026
   const calcularPJ = (renda) => {
     // Arquitetura: Anexo III (6%) com Fator R (28%)
-    const proLabore = Math.max(renda * 0.28, SALARIO_MINIMO);
+    const proLaboreCalculado = renda * 0.28;
+    const proLabore = Math.max(proLaboreCalculado, SALARIO_MINIMO);
+    
     const simplesNacional = renda * 0.06;
     const inss = proLabore * 0.11;
 
-    // IRRF: Isento conforme legislação para arquitetos (Anexo III)
-    const irProLabore = 0;
+    // Cálculo dinâmico do IRRF sobre o pró-labore (Regras 2026)
+    let baseCalculoPJ = Math.max(0, proLabore - DESCONTO_SIMPLIFICADO);
+    let irProLaboreCalculado = 0;
 
-    const totalPJ = simplesNacional + inss;
+    if (baseCalculoPJ <= 2428.8) {
+      irProLaboreCalculado = 0;
+    } else if (baseCalculoPJ <= 2826.65) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.075) - 182.16;
+    } else if (baseCalculoPJ <= 3751.05) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.15) - 394.16;
+    } else if (baseCalculoPJ <= 4664.68) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.225) - 675.49;
+    } else {
+      irProLaboreCalculado = (baseCalculoPJ * 0.275) - 908.73;
+    }
+
+    irProLaboreCalculado = Math.max(0, irProLaboreCalculado);
+
+    // Redutor 2026 para o Pró-labore
+    let redutorPJ = 0;
+    if (proLabore <= 5000) {
+      redutorPJ = 312.89;
+    } else if (proLabore <= 7350) {
+      redutorPJ = 978.62 - (0.133145 * proLabore);
+    }
+    redutorPJ = Math.max(0, redutorPJ);
+
+    const irProLabore = Math.max(0, irProLaboreCalculado - redutorPJ);
+
+    const totalPJ = simplesNacional + inss + irProLabore;
 
     return {
       renda,

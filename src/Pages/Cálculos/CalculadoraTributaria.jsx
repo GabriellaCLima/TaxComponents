@@ -76,8 +76,8 @@ const CalculadoraTributaria = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
 
-  // Constantes de limites e valores de referência
-  const SALARIO_MINIMO = 1518.0;
+  // Constantes de limites e valores de referência (Atualizado 2026)
+  const SALARIO_MINIMO = 1621.0;
   const LIMITE_RENDA = 15000.0;
 
   // Handler de mudança de aba (PF, PJ ou Comparação)
@@ -113,23 +113,29 @@ const CalculadoraTributaria = () => {
 
     let aliquota = 0;
     let parcelaADeduzir = 0;
+    let faixa = "";
 
     // Tabela Progressiva do IRPF mensal 2026
     if (baseCalculo <= 2428.8) {
       aliquota = 0;
       parcelaADeduzir = 0;
+      faixa = "Isento";
     } else if (baseCalculo <= 2826.65) {
       aliquota = 7.5;
       parcelaADeduzir = 182.16;
+      faixa = "7,5%";
     } else if (baseCalculo <= 3751.05) {
       aliquota = 15;
       parcelaADeduzir = 394.16;
+      faixa = "15%";
     } else if (baseCalculo <= 4664.68) {
       aliquota = 22.5;
       parcelaADeduzir = 675.49;
+      faixa = "22,5%";
     } else {
       aliquota = 27.5;
       parcelaADeduzir = 908.73;
+      faixa = "27,5%";
     }
 
     let impostoCalculado = (baseCalculo * (aliquota / 100)) - parcelaADeduzir;
@@ -155,6 +161,7 @@ const CalculadoraTributaria = () => {
       baseCalculo,
       aliquota,
       parcelaADeduzir,
+      faixa,
       imposto: impostoFinal,
       rendaLiquida,
       aliquotaEfetiva,

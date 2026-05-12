@@ -88,8 +88,10 @@ const ModalComparacaoAdv = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
 
+  // ATUALIZADO 2026
   const SALARIO_MINIMO = 1621.0;
   const LIMITE_RENDA = 15000.0;
+  const DESCONTO_SIMPLIFICADO = 607.20;
 
   const formatMoney = (value) => {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -110,14 +112,15 @@ const ModalComparacaoAdv = () => {
     showAlert("Resultados enviados para seu email.", "success");
   };
 
+  // CÁLCULO DE PESSOA FÍSICA - REGRAS 2026
   const calcularPF = (renda, custos) => {
-    const descontoSimplificado = 607.20;
-    const deducaoBase = Math.max(custos, descontoSimplificado);
+    const deducaoBase = Math.max(custos, DESCONTO_SIMPLIFICADO);
     let baseCalculo = Math.max(0, renda - deducaoBase);
     
     let aliquota = 0;
     let parcelaADeduzir = 0;
 
+    // Tabela Progressiva 2026
     if (baseCalculo <= 2428.8) {
       aliquota = 0; parcelaADeduzir = 0;
     } else if (baseCalculo <= 2826.65) {
@@ -132,6 +135,7 @@ const ModalComparacaoAdv = () => {
 
     let impostoCalculado = Math.max(0, (baseCalculo * (aliquota / 100)) - parcelaADeduzir);
 
+    // Redutor 2026
     let redutor = 0;
     if (renda <= 5000) {
       redutor = 312.89;
@@ -151,17 +155,41 @@ const ModalComparacaoAdv = () => {
     };
   };
 
+  // CÁLCULO DE PESSOA JURÍDICA - REGRAS 2026 (Advocacia - Anexo IV)
   const calcularPJ = (renda) => {
     const proLabore = SALARIO_MINIMO;
-    const simplesNacional = renda * 0.045; // Anexo IV
-    const inss = proLabore * 0.11;
-    const cpp = proLabore * 0.20; // CPP Patronal da Advocacia
+    const simplesNacional = renda * 0.045; // Anexo IV (4,5%)
+    const inss = proLabore * 0.11; // 11% desconto Sócio
+    const cpp = proLabore * 0.20; // 20% CPP Patronal da Advocacia
 
-    let irProLabore = 0;
-    if (proLabore > 2428.8) {
-      irProLabore = proLabore * 0.075 - 182.16;
+    // Cálculo dinâmico do IRRF sobre o pró-labore (Regras 2026)
+    let baseCalculoPJ = Math.max(0, proLabore - DESCONTO_SIMPLIFICADO);
+    let irProLaboreCalculado = 0;
+
+    if (baseCalculoPJ <= 2428.8) {
+      irProLaboreCalculado = 0;
+    } else if (baseCalculoPJ <= 2826.65) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.075) - 182.16;
+    } else if (baseCalculoPJ <= 3751.05) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.15) - 394.16;
+    } else if (baseCalculoPJ <= 4664.68) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.225) - 675.49;
+    } else {
+      irProLaboreCalculado = (baseCalculoPJ * 0.275) - 908.73;
     }
-    irProLabore = Math.max(0, irProLabore);
+
+    irProLaboreCalculado = Math.max(0, irProLaboreCalculado);
+
+    // Redutor 2026 para o Pró-labore
+    let redutorPJ = 0;
+    if (proLabore <= 5000) {
+      redutorPJ = 312.89;
+    } else if (proLabore <= 7350) {
+      redutorPJ = 978.62 - (0.133145 * proLabore);
+    }
+    redutorPJ = Math.max(0, redutorPJ);
+
+    const irProLabore = Math.max(0, irProLaboreCalculado - redutorPJ);
 
     const totalPJ = simplesNacional + inss + cpp + irProLabore;
 

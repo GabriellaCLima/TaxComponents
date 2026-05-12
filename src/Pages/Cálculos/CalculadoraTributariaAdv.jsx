@@ -66,8 +66,10 @@ const CalculadoraTributariaAdv = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
 
+  // ATUALIZADO PARA 2026
   const SALARIO_MINIMO = 1621.0;
   const LIMITE_RENDA = 15000.0;
+  const DESCONTO_SIMPLIFICADO = 607.20;
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -91,13 +93,13 @@ const CalculadoraTributariaAdv = () => {
 
   // Cálculo de tributação para Pessoa Física (IRPF 2026)
   const calcularPF = (renda, custos) => {
-    const descontoSimplificado = 607.20;
-    const deducaoBase = Math.max(custos, descontoSimplificado);
+    const deducaoBase = Math.max(custos, DESCONTO_SIMPLIFICADO);
     let baseCalculo = Math.max(0, renda - deducaoBase);
     
     let aliquota = 0;
     let parcelaADeduzir = 0;
 
+    // Tabela Progressiva 2026
     if (baseCalculo <= 2428.8) {
       aliquota = 0;
       parcelaADeduzir = 0;
@@ -118,6 +120,7 @@ const CalculadoraTributariaAdv = () => {
     let impostoCalculado = (baseCalculo * (aliquota / 100)) - parcelaADeduzir;
     impostoCalculado = Math.max(0, impostoCalculado);
 
+    // Redutor 2026
     let redutor = 0;
     if (renda <= 5000) {
       redutor = 312.89;
@@ -146,15 +149,41 @@ const CalculadoraTributariaAdv = () => {
   const calcularPJ = (renda) => {
     // Advocacia usa Anexo IV, não exige Fator R
     const proLabore = SALARIO_MINIMO;
-    const simplesNacional = renda * 0.045; // 4.5%
-    const inss = proLabore * 0.11;
-    const cpp = proLabore * 0.20; // 20% Patronal CPP
+    const simplesNacional = renda * 0.045; // 4.5% do Anexo IV
+    const inss = proLabore * 0.11; // Desconto de 11%
+    const cpp = proLabore * 0.20; // 20% Patronal (CPP) do Anexo IV
 
-    // IRRF: Isento conforme legislação para advogados (Anexo IV)
-    const irProLabore = 0;
+    // Cálculo dinâmico do IRRF sobre o pró-labore (Regras 2026)
+    let baseCalculoPJ = Math.max(0, proLabore - DESCONTO_SIMPLIFICADO);
+    let irProLaboreCalculado = 0;
 
-    // Total: DAS + INSS (desconto) + CPP (patronal)
-    const totalPJ = simplesNacional + inss + cpp;
+    if (baseCalculoPJ <= 2428.8) {
+      irProLaboreCalculado = 0;
+    } else if (baseCalculoPJ <= 2826.65) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.075) - 182.16;
+    } else if (baseCalculoPJ <= 3751.05) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.15) - 394.16;
+    } else if (baseCalculoPJ <= 4664.68) {
+      irProLaboreCalculado = (baseCalculoPJ * 0.225) - 675.49;
+    } else {
+      irProLaboreCalculado = (baseCalculoPJ * 0.275) - 908.73;
+    }
+
+    irProLaboreCalculado = Math.max(0, irProLaboreCalculado);
+
+    // Redutor 2026 para o Pró-labore
+    let redutorPJ = 0;
+    if (proLabore <= 5000) {
+      redutorPJ = 312.89;
+    } else if (proLabore <= 7350) {
+      redutorPJ = 978.62 - (0.133145 * proLabore);
+    }
+    redutorPJ = Math.max(0, redutorPJ);
+
+    const irProLabore = Math.max(0, irProLaboreCalculado - redutorPJ);
+
+    // Total: DAS + INSS (desconto) + CPP (patronal) + IR (se houver)
+    const totalPJ = simplesNacional + inss + cpp + irProLabore;
     const rendaLiquida = renda - totalPJ;
 
     return {
@@ -429,7 +458,7 @@ const CalculadoraTributariaAdv = () => {
             </Paper>
           )}
 
-          {/* Área de Email omitida por brevidade, mas segue a mesma lógica do seu código original */}
+          {/* Área de Email */}
           <Box sx={{ mt: 2, p: 2, display: "flex", gap: 2, alignItems: "center" }}>
             <FormControlLabel control={<Checkbox {...register("enviarEmail")} />} label="Receber por e-mail?" />
             <Grow in={watch("enviarEmail")}>
