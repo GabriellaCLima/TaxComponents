@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(uuid())
+  username   String
+  profissao  String?
+  email      String   @unique
+  password   String
+  createdAt  DateTime @default(now())
+
+  comparisons Comparison[]
+}
+
+model Comparison {
+  id             String   @id @default(uuid())
+  profession     String
+  monthlyIncome  Float
+  monthlyCosts   Float
+  pfResult       Float
+  pjResult       Float
+  bestOption     String
+  createdAt      DateTime @default(now())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+}
