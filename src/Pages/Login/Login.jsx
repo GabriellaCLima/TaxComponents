@@ -18,13 +18,11 @@ import Footer from "../../Components/Footer";
 import { tokens, ColorModeContext } from "../../Tema";
 import { userService } from "../../services/api";
 
-
 const Login = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
 
-  // Configuração do formulário com react-hook-form
   const {
     register,
     handleSubmit,
@@ -37,54 +35,41 @@ const Login = () => {
     },
   });
 
-  // estados locais da mensagem de erro
   const [loginError, setLoginError] = useState("");
-
   const navigate = useNavigate();
 
-  // Watch dos campos para validação do botão
   const watchedFields = watch();
   const areAllFieldsFilled = watchedFields.email && watchedFields.password;
   const isButtonDisabled = !areAllFieldsFilled;
 
-  // Handler de submit do formulário
   const onSubmit = async (data) => {
-  // Limpa erros anteriores
-  setLoginError("");
+    setLoginError("");
 
-  try {
-    console.log("Enviando dados para login:", {
-      email: data.email,
-      password: data.password
-    });
+    try {
+      console.log("Enviando dados para login:", {
+        email: data.email,
+        password: data.password,
+      });
 
-    // VALIDA LOGIN COM O BACKEND
-    const user = await userService.validateLogin(data.email, data.password);
+      // ✅ Chama o método correto do userService
+      const result = await userService.login({
+        email: data.email,
+        password: data.password,
+      });
 
-    if (user) {
-      // Login bem-sucedido
-      console.log("Login bem-sucedido:", user);
-      // setUserName(user.username || user.name); // Esta função não existe no seu código
-      
-      // Salva o usuário no localStorage
-      localStorage.setItem('user', JSON.stringify(user));
-      
+      // ✅ Login bem-sucedido (token e user já salvos automaticamente no api.js)
+      console.log("Login bem-sucedido:", result.user);
       navigate("/home");
-    } else {
-      // Login falhou
-      setLoginError("Email ou senha incorretos");
-      console.log("Login falhou - email ou senha inválidos");
+
+    } catch (error) {
+      // ✅ Captura erros do backend
+      setLoginError(error.message || "Email ou senha incorretos");
+      console.error("Erro no login:", error);
     }
-  } catch (error) {
-    // Login falhou
-    setLoginError(error.message || "Email ou senha incorretos");
-    console.error("Erro no login:", error);
-  }
-};
+  };
 
   return (
     <Box
-      // ESTILIZAÇÃO DA PÁGINA
       sx={{
         display: "flex",
         flexDirection: "column",
@@ -96,8 +81,7 @@ const Login = () => {
     >
       {/* Botão de alternar tema */}
       <IconButton
-        onClick={colorMode.toggleColorMode} // quando clicar, muda de tema escuro para claro
-        // Estilização para manter o botão na parte superior direita
+        onClick={colorMode.toggleColorMode}
         sx={{
           position: "absolute",
           top: 16,
@@ -107,41 +91,40 @@ const Login = () => {
         }}
       >
         {theme.palette.mode === "dark" ? (
-          <LightModeOutlined /> // se o tema for "escuro" aparece o sol
+          <LightModeOutlined />
         ) : (
-          <DarkModeOutlined /> // se o tema for "claro" aparece a lua
+          <DarkModeOutlined />
         )}
       </IconButton>
 
-      {/*Box para armazenar o form*/}
+      {/* Box para armazenar o form */}
       <Box
         sx={{
-          mx: "auto", // centraliza a box horizontalmente
-          my: "auto", // centraliza a box verticalmente
-          px: 4, // padding na horizontal de 4
-          py: 7, // padding na vertical de 7
-          backgroundColor: colors.primary[500], // deixa o background da box com a mesma cor da página
-          borderRadius: 2, // arredonda a borda da box
-          borderColor: "#878787", // borda cinza
-          borderWidth: 1, // coloca a grossura da borda
-          boxShadow: 3, // adiciona uma sombra na box
+          mx: "auto",
+          my: "auto",
+          px: 4,
+          py: 7,
+          backgroundColor: colors.primary[500],
+          borderRadius: 2,
+          borderColor: "#878787",
+          borderWidth: 1,
+          boxShadow: 3,
         }}
       >
-        {/*Cria o título de login do form*/}
+        {/* Título */}
         <Typography
-          variant="h1" // tamanho da fonte (h1)
-          // estilização da escrita
+          variant="h1"
           sx={{
-            textAlign: "center", // alinha o texto horizontalmente
-            mb: 8, // margem inferior de 8
-            color: colors.grey[100], // cor fica branca no modo escuro e preta no modo claro
-            fontWeight: "bold", // fonte negrito
+            textAlign: "center",
+            mb: 8,
+            color: colors.grey[100],
+            fontWeight: "bold",
           }}
         >
           Login
         </Typography>
 
-        {/*Formulário em si*/}
+        {/* Formulário */}
         <Box
           component="form"
           onSubmit={handleSubmit(onSubmit)}
@@ -153,9 +136,9 @@ const Login = () => {
         >
           <Box>
             <EmailInput register={register} errors={errors} />
-
             <PasswordInput register={register} errors={errors} />
-            {/* MENSAGEM DE ERRO DO LOGIN */}
+
+            {/* Mensagem de erro do login */}
             <Typography
               variant="caption"
               sx={{
@@ -171,6 +154,7 @@ const Login = () => {
               {loginError}
             </Typography>
           </Box>
+
           <Box
             sx={{
               display: "flex",
@@ -223,40 +207,44 @@ const Login = () => {
                 </Link>
               </Typography>
             </Box>
-          </Box>
-          <ButtonUsage type="submit" disabled={isButtonDisabled}>
-            Entrar
-          </ButtonUsage>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              mt: 2,
-              gap: 1,
-            }}
-          >
-            <Typography variant="body2" sx={{ color: colors.grey[100] }}>
-              Não possui uma conta?
-            </Typography>
-            <Typography variant="body2" sx={{ color: colors.grey[600] }}>
-              <Link
-                onClick={() => navigate("/Register")}
-                sx={{
-                  cursor: "pointer",
-                  color: colors.blueAccent[500],
-                  "&:hover": {
-                    color: colors.blueAccent[600],
-                  },
-                  textDecoration: "underline",
-                }}
-              >
-                Registre-se
-              </Link>
-            </Typography>
+
+            <ButtonUsage type="submit" disabled={isButtonDisabled}>
+              Entrar
+            </ButtonUsage>
+
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mt: 2,
+                gap: 1,
+              }}
+            >
+              <Typography variant="body2" sx={{ color: colors.grey[100] }}>
+                Não possui uma conta?
+              </Typography>
+              <Typography variant="body2" sx={{ color: colors.grey[600] }}>
+                <Link
+                  onClick={() => navigate("/Register")}
+                  sx={{
+                    cursor: "pointer",
+                    color: colors.blueAccent[500],
+                    "&:hover": {
+                      color: colors.blueAccent[600],
+                    },
+                    textDecoration: "underline",
+                  }}
+                >
+                  Registre-se
+                </Link>
+              </Typography>
+            </Box>
+
+            <Footer />
+
           </Box>
         </Box>
       </Box>
-      <Footer />
     </Box>
   );
 };
