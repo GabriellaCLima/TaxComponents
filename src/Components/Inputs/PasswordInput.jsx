@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Box,
   TextField,
   Typography,
   IconButton,
@@ -9,100 +10,111 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { tokens } from "../../Tema";
 
-const PasswordInput = ({ register, errors }) => {
+// ✅ Agora recebe name, label e rules como props
+const PasswordInput = ({
+  register,
+  errors,
+  name = "password",       // ← prop para o nome do campo
+  label = "Senha",         // ← prop para o label
+  rules = {                // ← prop para as regras de validação
+    required: "Senha é obrigatória",
+    minLength: {
+      value: 6,
+      message: "Senha deve ter ao menos 6 caracteres",
+    },
+  },
+}) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
-  // Estado para alternar entre mostrar/ocultar a senha
   const [show, setShow] = useState(false);
 
-  // Mostra mensagem de erro específica ou mensagem padrão invisível para manter layout
-  const errorMessage = errors.password
-    ? errors.password.message
-    : "";
- const hasError = !!errors.password;
+  // ✅ Usa o name dinâmico para buscar o erro correto
+  const hasError = !!errors?.[name];
+  const errorMessage = errors?.[name]?.message || "";
+
+  // ✅ Registra com o name e rules dinâmicos
+  const registeredProps = register(name, rules);
+
   return (
-    <div>
-      {/* CAMPO DE INPUT DE SENHA */}
+    <Box>
       <TextField
-        label="Senha"
+        label={label}
         variant="outlined"
         size="small"
-        type={show ? "text" : "password"} // Alterna entre texto visível e password
-        error={hasError}
         fullWidth
-        // BOTÃO TOGGLE DE VISIBILIDADE
-        slotProps={{
-          input: {
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShow(!show)} // Alterna estado de visibilidade
-                  edge="end"
-                  aria-label={show ? "Ocultar senha" : "Mostrar senha"} // Acessibilidade
-                  sx={{ color: colors.grey[300] }}
-                >
-                  {show ? <Visibility /> : <VisibilityOff /> }
-                  {/* Ícone dinâmico */}
-                </IconButton>
-              </InputAdornment>
-            ),
-          },
-        }}
-        // ESTILIZAÇÃO DO CAMPO DE SENHA
-sx={{
+        // ✅ Alterna entre texto e senha
+        type={show ? "text" : "password"}
+        error={hasError}
+        sx={{
           width: "100%",
-          // ESTILIZAÇÃO DO CONTAINER DO INPUT
-          '& .MuiOutlinedInput-root': {
+          "& .MuiOutlinedInput-root": {
             backgroundColor: colors.primary[500],
-            '& fieldset': {
-              borderColor: hasError ? colors.redAccent[400] : colors.grey[300],
+            "& fieldset": {
+              borderColor: hasError
+                ? colors.redAccent[400]
+                : colors.grey[300],
             },
-            '&:hover fieldset': {
-              borderColor: hasError ? colors.redAccent[400] : colors.blueAccent[500],
+            "&:hover fieldset": {
+              borderColor: hasError
+                ? colors.redAccent[400]
+                : colors.blueAccent[500],
             },
-            '&.Mui-focused fieldset': {
-              borderColor: hasError ? colors.redAccent[400] : colors.blueAccent[500],
+            "&.Mui-focused fieldset": {
+              borderColor: hasError
+                ? colors.redAccent[400]
+                : colors.blueAccent[500],
             },
           },
-          //  ESTILIZAÇÃO DO LABEL
-          '& .MuiInputLabel-root': {
+          "& .MuiInputLabel-root": {
             color: hasError ? colors.redAccent[400] : colors.grey[300],
-            '&.Mui-focused': {
-              color: hasError ? colors.redAccent[400] : colors.blueAccent[500],
+            "&.Mui-focused": {
+              color: hasError
+                ? colors.redAccent[400]
+                : colors.blueAccent[500],
             },
           },
-          // ESTILIZAÇÃO DO TEXTO DIGITADO
-          '& .MuiOutlinedInput-input': {
+          "& .MuiOutlinedInput-input": {
             color: colors.grey[100],
           },
         }}
-        // REGISTRO NO REACT-HOOK-FORM COM VALIDAÇÕES
-        {...register("password", {
-          required: "Senha é obrigatória", // Validação de campo obrigatório
-          minLength: {
-            value: 6, // Comprimento mínimo de 6 caracteres
-            message: "Senha deve ter ao menos 6 caracteres", // Mensagem de erro específica
-          },
-        })}
+        // ✅ InputProps para o ícone — sem interferir no register
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                onClick={() => setShow((prev) => !prev)}
+                onMouseDown={(e) => e.preventDefault()} // ✅ evita perda de foco
+                edge="end"
+                tabIndex={-1} // ✅ não atrapalha navegação por TAB
+                aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+                sx={{ color: colors.grey[300] }}
+              >
+                {show ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+        // ✅ Spread por último — garante que register não é sobrescrito
+        {...registeredProps}
       />
 
-      {/* MENSAGEM DE ERRO DINÂMICA */}
+      {/* MENSAGEM DE ERRO */}
       <Typography
         variant="caption"
         sx={{
-          minHeight: "20px", // Altura mínima para manter espaço mesmo sem erro
+          minHeight: "20px",
           fontWeight: "bold",
-          color: errors.password ? colors.redAccent[100] : "transparent", // Vermelho se erro, transparente se não
-          visibility: errors.password ? "visible" : "hidden", // Visível apenas quando há erro
-          marginTop: "4px", // Espaço acima da mensagem
-          display: "block", // Garante que ocupa toda a largura
-          fontSize: "12px", // Tamanho de fonte menor para mensagens de erro
+          color: colors.redAccent[100],
+          visibility: hasError ? "visible" : "hidden",
+          marginTop: "4px",
+          display: "block",
+          fontSize: "12px",
         }}
       >
-        {errorMessage}
+        {errorMessage || " "}
       </Typography>
-    </div>
+    </Box>
   );
 };
 

@@ -6,6 +6,24 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   globalIgnores(['dist']),
+
+  // ✅ ADICIONADO — configura server.js como ambiente Node.js
+  {
+    files: ['server.js'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.node, // ← process, __dirname, etc.
+      },
+      sourceType: 'module',
+    },
+    rules: {
+      'no-unused-vars': ['warn', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+
+  // Configuração original do React — não mexeu
   {
     files: ['**/*.{js,jsx}'],
     extends: [
