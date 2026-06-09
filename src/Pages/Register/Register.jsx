@@ -1,24 +1,22 @@
 import { useContext, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   useTheme,
   Box,
   Typography,
   TextField,
   IconButton,
-  InputAdornment,
   InputLabel,
   MenuItem,
   FormControl,
   Select,
   Link,
+  CircularProgress,
 } from "@mui/material";
 import {
   LightModeOutlined,
   DarkModeOutlined,
-  Visibility,
-  VisibilityOff,
 } from "@mui/icons-material";
 import EmailInput from "../../Components/Inputs/EmailInput";
 import PasswordInput from "../../Components/Inputs/PasswordInput";
@@ -31,12 +29,18 @@ const Register = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
+  const navigate = useNavigate();
 
-  // ESTADOS LOCAIS DO COMPONENTE
-  const [showPassword, setShowPassword] = useState(false);
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ESTADOS LOCAIS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [emailCadastradoError, setEmailCadastradoError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // CONFIGURAÇÃO DO REACT-HOOK-FORM
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const {
     register,
     watch,
@@ -52,16 +56,29 @@ const Register = () => {
       confirmPassword: "",
     },
   });
-  const navigate = useNavigate();
 
-  // OBSERVAÇÃO DE CAMPOS ESPECÍFICOS
-  const password = watch("password");
-  const confirmPassword = watch("confirmPassword");
-
-  // OBSERVAÇÃO DE TODOS OS CAMPOS PARA VALIDAÇÃO
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // OBSERVAÇÃO DE CAMPOS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const watchedFields = watch();
+  const watchedEmail = watch("email");
 
-  // VERIFICAÇÃO DE CAMPOS OBRIGATÓRIOS
+  useEffect(() => {
+    setEmailCadastradoError("");
+  }, [watchedEmail]);
+
+  useEffect(() => {
+    if (
+      watchedFields.confirmPassword &&
+      watchedFields.password === watchedFields.confirmPassword
+    ) {
+      setConfirmPasswordError("");
+    }
+  }, [watchedFields.password, watchedFields.confirmPassword]);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // VALIDAÇÕES E CONTROLES
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const areAllFieldsFilled =
     watchedFields.username &&
     watchedFields.profissao &&
@@ -69,76 +86,127 @@ const Register = () => {
     watchedFields.password &&
     watchedFields.confirmPassword;
 
-  const watchedEmail = watch("email");
+  const isButtonDisabled = !areAllFieldsFilled || isLoading;
 
-  // Use useEffect para limpar o erro quando o email mudar
-  useEffect(() => {
-      setEmailCadastradoError("");  
-  }, []);
+  const errorName = errors.username?.message || "";
+  const errorProfissao = errors.profissao?.message || "";
+  const hasErrorName = !!errors.username;
+  const hasErrorProfissao = !!errors.profissao;
 
-  // CONTROLE DE ESTADO DO BOTÃO
-  const isButtonDisabled = !areAllFieldsFilled;
-
-  // MENSAGENS DE ERRO CONDICIONAIS
-  const errorName = errors.username ? errors.username.message : "";
-  const errorProfissao = errors.profissao ? errors.profissao.message : "";
-
-  const hasError = !!errors.username;
-
-  // HANDLER PARA MUDANÇA DE PROFISSÃO
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // HANDLER PROFISSÃO
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const handleProfissaoChange = (event) => {
     setValue("profissao", event.target.value, { shouldValidate: true });
   };
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // SUBMISSÃO DO FORMULÁRIO
-
- const onSubmit = async (data) => {
-  // VALIDAÇÃO DE CONFIRMAÇÃO DE SENHA
-  if (data.password !== data.confirmPassword) {
-    setConfirmPasswordError("As senhas não coincidem!");
-    return;
-  }
-
-  // PROCESSAMENTO DOS DADOS
-  setConfirmPasswordError("");
-  setEmailCadastradoError("");
-
-  try {
-    console.log("Enviando dados para registro:", data);
-
-    const newUser = await userService.addUser({
-      username: data.username,
-      profissao: data.profissao,
-      email: data.email,
-      password: data.password 
-    });
-
-    console.log("Usuário cadastrado com sucesso:", newUser);
-    
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-        
-    if (token && user) {
-      console.log("Redirecionando para home...");
-      navigate("/home");
-    } else {
-      // Fallback: se algo der errado, vai para login
-      console.log("Token não salvo, redirecionando para login");
-      navigate("/login");
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const onSubmit = async (data) => {
+    if (data.password !== data.confirmPassword) {
+      setConfirmPasswordError("As senhas não coincidem!");
+      return;
     }
-    
-  } catch (error) {
-    console.error("Erro ao cadastrar usuário:", error);
-    
-    // Verificar se o erro é de email já cadastrado
-    if (error.message && error.message.includes('já cadastrado')) {
-      setEmailCadastradoError("E-mail já cadastrado!");
-    } else {
-      setEmailCadastradoError("Erro ao cadastrar usuário. Tente novamente.");
-    }
-  }
-};
 
+    setConfirmPasswordError("");
+    setEmailCadastradoError("");
+    setIsLoading(true);
+
+    try {
+      const response = await userService.addUser({
+        name: data.username,
+        profession: data.profissao,
+        email: data.email,
+        password: data.password,
+      });
+
+      console.log("✅ Usuário cadastrado:", response);
+
+      if (response?.token) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        navigate("/home");
+      } else {
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("❌ Erro ao cadastrar:", error);
+
+      if (error.message?.includes("já cadastrado")) {
+        setEmailCadastradoError("E-mail já cadastrado!");
+      } else if (error.message?.includes("inválido")) {
+        setEmailCadastradoError("Formato de e-mail inválido.");
+      } else {
+        setEmailCadastradoError("Erro ao cadastrar. Tente novamente.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ✅ ESTILOS CORRIGIDOS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const getTextFieldStyles = (hasFieldError) => ({
+    width: "100%",
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: colors.primary[500],
+      "& fieldset": {
+        borderColor: hasFieldError
+          ? colors.redAccent[400]
+          : colors.grey[300],
+      },
+      "&:hover fieldset": {
+        borderColor: hasFieldError
+          ? colors.redAccent[400]
+          : colors.blueAccent[500],
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: hasFieldError
+          ? colors.redAccent[400]
+          : colors.blueAccent[500],
+      },
+    },                                        // ✅ fecha MuiOutlinedInput-root
+    "& .MuiInputLabel-root": {               // ✅ fora do MuiOutlinedInput-root
+      color: hasFieldError
+        ? colors.redAccent[400]
+        : colors.grey[300],
+      "&.Mui-focused": {
+        color: hasFieldError
+          ? colors.redAccent[400]
+          : colors.blueAccent[500],
+      },
+    },                                        // ✅ fecha MuiInputLabel-root
+    "& .MuiOutlinedInput-input": {           // ✅ fora do MuiOutlinedInput-root
+      color: colors.grey[100],
+    },
+  });                                         // ✅ fecha o objeto principal
+
+  const selectStyles = {
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: hasErrorProfissao
+        ? colors.redAccent[400]
+        : colors.grey[300],
+    },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: hasErrorProfissao
+        ? colors.redAccent[400]
+        : colors.blueAccent[500],
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: hasErrorProfissao
+        ? colors.redAccent[400]
+        : colors.blueAccent[500],
+    },
+    "& .MuiSelect-select": {
+      color: colors.grey[100],
+    },
+  };
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // RENDER
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   return (
     <Box
       sx={{
@@ -157,33 +225,34 @@ const Register = () => {
           position: "absolute",
           top: 16,
           right: 16,
-          ml: 1,
           color: colors.grey[100],
         }}
       >
         {theme.palette.mode === "dark" ? (
-          <LightModeOutlined /> //  Ícone de sol no modo escuro
+          <LightModeOutlined />
         ) : (
-          <DarkModeOutlined /> //  Ícone de lua no modo claro
+          <DarkModeOutlined />
         )}
       </IconButton>
 
-      {/* CONTAINER PRINCIPAL DO FORMULÁRIO */}
+      {/* CONTAINER DO FORMULÁRIO */}
       <Box
         sx={{
-          mx: "auto", // centraliza a box horizontalmente
-          my: "auto", // centraliza a box verticalmente
-          px: 4, // padding na horizontal de 4
-          py: 7, // padding na vertical de 7
-          backgroundColor: colors.primary[500], // deixa o background da box com a mesma cor da página
-          borderRadius: 2, // arredonda a borda da box
-          borderColor: "#878787", // borda cinza
-          borderWidth: 1, // coloca a grossura da borda
-          boxShadow: 3, // adiciona uma sombra na box
+          mx: "auto",
+          my: "auto",
+          px: 4,
+          py: 7,
+          backgroundColor: colors.primary[500],
+          borderRadius: 2,
+          borderColor: "#878787",
+          borderWidth: 1,
+          borderStyle: "solid",
+          boxShadow: 3,
           marginBottom: "25px",
+          width: { xs: "90%", sm: "420px" },
         }}
       >
-        {/* TÍTULO DA PÁGINA */}
+        {/* TÍTULO */}
         <Typography
           variant="h1"
           sx={{
@@ -196,81 +265,56 @@ const Register = () => {
           Cadastrar
         </Typography>
 
-        {/* FORMULÁRIO DE REGISTRO */}
+        {/* FORMULÁRIO */}
         <Box
           component="form"
           onSubmit={handleSubmit(onSubmit)}
           sx={{ display: "flex", flexDirection: "column", gap: 2 }}
         >
-          {/* CAMPO NOME COMPLETO */}
+          {/* CAMPO NOME */}
           <Box>
             <TextField
               label="Nome"
               variant="outlined"
               size="small"
-              error={!!errors.username}
-              sx={{
-                width: "100%",
-                // ESTILIZAÇÃO DO CONTAINER DO INPUT
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: colors.primary[500],
-                  "& fieldset": {
-                    borderColor: hasError
-                      ? colors.redAccent[400]
-                      : colors.grey[300],
-                  },
-                  "&:hover fieldset": {
-                    borderColor: hasError
-                      ? colors.redAccent[400]
-                      : colors.blueAccent[500],
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: hasError
-                      ? colors.redAccent[400]
-                      : colors.blueAccent[500],
-                  },
+              error={hasErrorName}
+              sx={getTextFieldStyles(hasErrorName)}
+              {...register("username", {
+                required: "Nome é obrigatório",
+                minLength: {
+                  value: 2,
+                  message: "Nome deve ter no mínimo 2 caracteres",
                 },
-                //  ESTILIZAÇÃO DO LABEL
-                "& .MuiInputLabel-root": {
-                  color: hasError ? colors.redAccent[400] : colors.grey[300],
-                  "&.Mui-focused": {
-                    color: hasError
-                      ? colors.redAccent[400]
-                      : colors.blueAccent[500],
-                  },
-                },
-                // ESTILIZAÇÃO DO TEXTO DIGITADO
-                "& .MuiOutlinedInput-input": {
-                  color: colors.grey[100],
-                },
-              }}
-              {...register("username", { required: "Nome é obrigatório" })}
+              })}
             />
-            {/* MENSAGEM DE ERRO DO NOME */}
             <Typography
               variant="caption"
               sx={{
                 minHeight: "10px",
                 fontWeight: "bold",
-                color: errors.username ? colors.redAccent[100] : "transparent",
-                visibility: errors.username ? "visible" : "hidden",
+                color: colors.redAccent[100],
+                visibility: hasErrorName ? "visible" : "hidden",
                 marginTop: "1px",
                 display: "block",
               }}
             >
-              {errorName}
+              {errorName || " "}
             </Typography>
           </Box>
 
-          {/* CAMPO PROFISSÃO (SELECT) */}
+          {/* CAMPO PROFISSÃO */}
           <Box>
             <FormControl fullWidth size="small">
               <InputLabel
                 id="profissao-label"
                 sx={{
-                  color: colors.grey[300],
+                  color: hasErrorProfissao
+                    ? colors.redAccent[400]
+                    : colors.grey[300],
                   "&.Mui-focused": {
-                    color: colors.blueAccent[500],
+                    color: hasErrorProfissao
+                      ? colors.redAccent[400]
+                      : colors.blueAccent[500],
                   },
                 }}
               >
@@ -282,173 +326,136 @@ const Register = () => {
                 label="Profissão"
                 value={watch("profissao") || ""}
                 onChange={handleProfissaoChange}
-                sx={{
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: colors.grey[300],
-                  },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: colors.blueAccent[500],
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: colors.blueAccent[500],
-                  },
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: colors.primary[500],
-                    "& fieldset": { borderColor: colors.grey[300] },
-                    "&:hover fieldset": {
-                      borderColor: colors.blueAccent[500],
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: colors.blueAccent[500],
-                    },
-                  },
-                  "& .MuiSelect-select": {
-                    color: colors.grey[100],
-                    display: "flex",
-                    alignItems: "center",
-                    minHeight: "auto",
-                  },
-                }}
+                sx={selectStyles}
               >
                 <MenuItem value="Psicólogo">Psicólogo(a)</MenuItem>
                 <MenuItem value="Arquiteto">Arquiteto(a)</MenuItem>
                 <MenuItem value="Advogado">Advogado(a)</MenuItem>
+                <MenuItem value="Médico">Médico(a)</MenuItem>
+                <MenuItem value="Engenheiro">Engenheiro(a)</MenuItem>
+                <MenuItem value="Contador">Contador(a)</MenuItem>
+                <MenuItem value="Dentista">Dentista(a)</MenuItem>
+                <MenuItem value="Nutricionista">Nutricionista</MenuItem>
+                <MenuItem value="Fisioterapeuta">Fisioterapeuta</MenuItem>
+                <MenuItem value="Outro">Outro</MenuItem>
               </Select>
             </FormControl>
-            {/* MENSAGEM DE ERRO DA PROFISSÃO */}
             <Typography
               variant="caption"
               sx={{
                 minHeight: "10px",
                 fontWeight: "bold",
-                color: errors.profissao ? colors.redAccent[100] : "transparent",
-                visibility: errors.profissao ? "visible" : "hidden",
+                color: colors.redAccent[100],
+                visibility: hasErrorProfissao ? "visible" : "hidden",
                 marginTop: "1px",
                 display: "block",
               }}
             >
-              {errorProfissao}
+              {errorProfissao || " "}
             </Typography>
           </Box>
 
-          {/* COMPONENTE DE EMAIL REUTILIZÁVEL */}
-          <EmailInput
+          {/* CAMPO EMAIL */}
+          <Box>
+            <EmailInput
+              register={register}
+              errors={errors}
+              colors={colors}
+            />
+            {emailCadastradoError && (
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: "bold",
+                  color: colors.redAccent[100],
+                  marginTop: "4px",
+                  display: "block",
+                }}
+              >
+                ⚠️ {emailCadastradoError}
+              </Typography>
+            )}
+          </Box>
+
+          {/* CAMPO SENHA */}
+          <PasswordInput
             register={register}
             errors={errors}
-            customError={emailCadastradoError}
+            colors={colors}
+            name="password"
+            label="Senha"
+            rules={{
+              required: "Senha é obrigatória",
+              minLength: {
+                value: 6,
+                message: "Senha deve ter no mínimo 6 caracteres",
+              },
+            }}
           />
-
-          {/* COMPONENTE DE SENHA REUTILIZÁVEL */}
-          <PasswordInput register={register} errors={errors} />
 
           {/* CAMPO CONFIRMAR SENHA */}
           <Box>
-            <TextField
-              label="Confirme a Senha"
-              variant="outlined"
-              size="small"
-              type={showPassword ? "text" : "password"}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label={
-                          showPassword ? "Esconder senha" : "Mostrar senha"
-                        }
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        sx={{ color: colors.grey[300] }}
-                      >
-                        {showPassword ? <Visibility /> : <VisibilityOff />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              sx={{
-                width: "100%",
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: colors.primary[500],
-                  "& fieldset": {
-                    borderColor: colors.grey[300],
-                  },
-                  "&:hover fieldset": {
-                    borderColor: colors.blueAccent[500],
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: colors.blueAccent[500],
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: colors.grey[300],
-                  "&.Mui-focused": {
-                    color: colors.blueAccent[500],
-                  },
-                },
-                "& .MuiOutlinedInput-input": {
-                  color: colors.grey[100],
-                },
-              }}
-              {...register("confirmPassword", {
-                required: "Confirmação obrigatória",
-              })}
+            <PasswordInput
+              register={register}
+              errors={errors}
+              colors={colors}
+              name="confirmPassword"
+              label="Confirmar Senha"
+              rules={{ required: "Confirmação de senha é obrigatória" }}
             />
-            {/* MENSAGEM DE ERRO DA CONFIRMAÇÃO DE SENHA */}
-            <Typography
-              variant="caption"
-              sx={{
-                minHeight: "10px",
-                fontWeight: "bold",
-                color: confirmPasswordError
-                  ? colors.redAccent[100]
-                  : "transparent",
-                visibility: confirmPasswordError ? "visible" : "hidden",
-                marginTop: "1px",
-                display: "block",
-              }}
-            >
-              {confirmPasswordError}
-            </Typography>
+            {confirmPasswordError && (
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: "bold",
+                  color: colors.redAccent[100],
+                  marginTop: "4px",
+                  display: "block",
+                }}
+              >
+                ⚠️ {confirmPasswordError}
+              </Typography>
+            )}
           </Box>
 
-          {/* BOTÃO DE REGISTRO */}
-          <ButtonUsage type="submit" disabled={isButtonDisabled}>
-              Cadastrar
+          {/* BOTÃO DE CADASTRO */}
+          <ButtonUsage
+            type="submit"
+            disabled={isButtonDisabled}
+            sx={{ mt: 1 }}
+          >
+            {isLoading ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <CircularProgress size={18} color="inherit" />
+                Cadastrando...
+              </Box>
+            ) : (
+              "Cadastrar"
+            )}
           </ButtonUsage>
 
           {/* LINK PARA LOGIN */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              mt: 2,
-              gap: 1,
-            }}
+          <Typography
+            variant="body2"
+            sx={{ textAlign: "center", mt: 1, color: colors.grey[300] }}
           >
-            <Typography variant="body2" sx={{ color: colors.grey[100] }}>
-              Já possui uma conta?
-            </Typography>
-            <Typography variant="body2" sx={{ color: colors.grey[600] }}>
-              <Link
-                onClick={() => navigate("/login")}
-                sx={{
-                  cursor: "pointer",
-                  color: colors.blueAccent[500],
-                  "&:hover": {
-                    color: colors.blueAccent[600],
-                  },
-                  textDecoration: "underline",
-                }}
-              >
-                Faça Login
-              </Link>
-            </Typography>
-          </Box>
+            Já tem uma conta?{" "}
+            <Link
+              component={RouterLink}
+              to="/login"
+              sx={{
+                color: colors.blueAccent[400],
+                fontWeight: "bold",
+                textDecoration: "none",
+                "&:hover": { textDecoration: "underline" },
+              }}
+            >
+              Entrar
+            </Link>
+          </Typography>
         </Box>
       </Box>
 
-      {/* FOOTER DA PÁGINA */}
       <Footer />
     </Box>
   );
