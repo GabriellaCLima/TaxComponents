@@ -44,7 +44,6 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     setLoginError("");
-
     try {
       console.log("Enviando dados para login:", {
         email: data.email,
@@ -57,12 +56,10 @@ const Login = () => {
         password: data.password,
       });
 
-      // ✅ Login bem-sucedido (token e user já salvos automaticamente no api.js)
       console.log("Login bem-sucedido:", result.user);
       navigate("/home");
 
     } catch (error) {
-      // ✅ Captura erros do backend
       setLoginError(error.message || "Email ou senha incorretos");
       console.error("Erro no login:", error);
     }
@@ -104,6 +101,8 @@ const Login = () => {
           my: "auto",
           px: 4,
           py: 7,
+          width: "100%",
+          maxWidth: "400px", // ✅ limita a largura do card igual ao original
           backgroundColor: colors.primary[500],
           borderRadius: 2,
           borderColor: "#878787",
@@ -134,34 +133,31 @@ const Login = () => {
             gap: 2,
           }}
         >
-          <Box>
-            <EmailInput register={register} errors={errors} />
-            <PasswordInput register={register} errors={errors} />
+          <EmailInput register={register} errors={errors} />
+          <PasswordInput register={register} errors={errors} />
 
-            {/* Mensagem de erro do login */}
-            <Typography
-              variant="caption"
-              sx={{
-                minHeight: "20px",
-                fontWeight: "bold",
-                color: loginError ? colors.redAccent[100] : "transparent",
-                visibility: loginError ? "visible" : "hidden",
-                marginTop: "1px",
-                display: "block",
-                textAlign: "center",
-              }}
-            >
-              {loginError}
-            </Typography>
-          </Box>
+          {/* Mensagem de erro do login */}
+          <Typography
+            variant="caption"
+            sx={{
+              minHeight: "20px",
+              fontWeight: "bold",
+              color: loginError ? colors.redAccent[100] : "transparent",
+              visibility: loginError ? "visible" : "hidden",
+              marginTop: "1px",
+              display: "block",
+              textAlign: "center",
+            }}
+          >
+            {loginError}
+          </Typography>
 
+          {/* Lembrar de mim + Esqueceu a senha */}
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: 2,
-              flexDirection: { xs: "column", sm: "row" },
             }}
           >
             <FormControlLabel
@@ -169,8 +165,6 @@ const Login = () => {
               control={
                 <Checkbox
                   sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
                     color: colors.grey[300],
                     "&.Mui-checked": {
                       color: colors.blueAccent[500],
@@ -184,67 +178,57 @@ const Login = () => {
                 },
               }}
             />
-
-            <Box
-              sx={{
-                textAlign: { xs: "center", sm: "right" },
-                width: { xs: "100%", sm: "auto" },
-              }}
-            >
-              <Typography variant="body2" sx={{ color: colors.grey[600] }}>
-                <Link
-                  onClick={() => navigate("/login/forgot")}
-                  sx={{
-                    cursor: "pointer",
-                    color: colors.blueAccent[500],
-                    "&:hover": {
-                      color: colors.blueAccent[600],
-                    },
-                    textDecoration: "underline",
-                  }}
-                >
-                  Esqueceu a senha?
-                </Link>
-              </Typography>
-            </Box>
-
-            <ButtonUsage type="submit" disabled={isButtonDisabled}>
-              Entrar
-            </ButtonUsage>
-
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                mt: 2,
-                gap: 1,
-              }}
-            >
-              <Typography variant="body2" sx={{ color: colors.grey[100] }}>
-                Não possui uma conta?
-              </Typography>
-              <Typography variant="body2" sx={{ color: colors.grey[600] }}>
-                <Link
-                  onClick={() => navigate("/Register")}
-                  sx={{
-                    cursor: "pointer",
-                    color: colors.blueAccent[500],
-                    "&:hover": {
-                      color: colors.blueAccent[600],
-                    },
-                    textDecoration: "underline",
-                  }}
-                >
-                  Registre-se
-                </Link>
-              </Typography>
-            </Box>
-
-            <Footer />
-
+            <Typography variant="body2">
+              <Link
+                onClick={() => navigate("/login/forgot")}
+                sx={{
+                  cursor: "pointer",
+                  color: colors.blueAccent[500],
+                  "&:hover": { color: colors.blueAccent[600] },
+                  textDecoration: "underline",
+                }}
+              >
+                Esqueceu a senha?
+              </Link>
+            </Typography>
           </Box>
+
+          {/* Botão Entrar */}
+          <ButtonUsage type="submit" disabled={isButtonDisabled}>
+            Entrar
+          </ButtonUsage>
+
+          {/* Não possui uma conta */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              mt: 2,
+              gap: 1,
+            }}
+          >
+            <Typography variant="body2" sx={{ color: colors.grey[100] }}>
+              Não possui uma conta?
+            </Typography>
+            <Link
+              onClick={() => navigate("/Register")}
+              sx={{
+                cursor: "pointer",
+                color: colors.blueAccent[500],
+                "&:hover": { color: colors.blueAccent[600] },
+                textDecoration: "underline",
+                fontSize: "0.875rem",
+              }}
+            >
+              Registre-se
+            </Link>
+          </Box>
+
         </Box>
       </Box>
+
+      <Footer />
+
     </Box>
   );
 };
