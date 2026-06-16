@@ -352,7 +352,52 @@ app.delete('/comparisons/:id', authenticateToken, async (req, res) => {
         });
     }
 });
-
+// ⚠️ ROTA TEMPORÁRIA DE DEBUG
+app.get('/debug/users', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            `SELECT 
+                id,
+                name,
+                profession,
+                email,
+                LEFT(password, 20) || '...' AS password_hash,
+                created_at
+             FROM users`
+        );
+        return res.status(200).json({
+            mensagem: '✅ Dados persistidos no PostgreSQL!',
+            total_usuarios: rows.length,
+            usuarios: rows,
+        });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+// ⚠️ ROTA TEMPORÁRIA — ver comparativos no banco
+app.get('/debug/comparisons', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            `SELECT 
+                c.id,
+                c.user_id,
+                u.name AS usuario,
+                u.email AS email_usuario,
+                c.tax_data,
+                c.created_at
+             FROM comparisons c
+             JOIN users u ON c.user_id = u.id
+             ORDER BY c.created_at DESC`
+        );
+        return res.status(200).json({
+            mensagem: '✅ Comparativos no PostgreSQL!',
+            total_comparativos: rows.length,
+            comparativos: rows,
+        });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  INICIALIZAÇÃO
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
